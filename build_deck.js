@@ -402,7 +402,58 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
 }
 
 // ---------------------------------------------------------------------------
-// Slide 7 — Comparison table + why X-learner
+// Slide 7 — T-Learner deep dive: WHY imbalance breaks the subtraction
+// ---------------------------------------------------------------------------
+{
+  const s = newSlide(WHITE);
+  header(s, "Estimator 2 of 3 · Mechanism", "Why Imbalance Breaks the Subtraction");
+
+  // Notation legend
+  s.addShape("roundRect", { x: 0.6, y: 1.45, w: 12.1, h: 0.82, rectRadius: 0.06, fill: { color: ICE_LT }, line: { type: "none" } });
+  s.addText([
+    { text: "Notation:  ", options: { bold: true, color: NAVY } },
+    { text: "μ̂₀(x), μ̂₁(x) = the two outcome models — predicted P(Applied), without vs. with the offer.   τ(x) = μ̂₁(x) − μ̂₀(x) = the uplift score we're estimating.   n₀, n₁ = how many customers trained each model.   Var(·) = how noisy a model's predictions are — it shrinks as n grows.", options: { color: BODY } },
+  ], { x: 0.85, y: 1.45, w: 11.6, h: 0.82, valign: "middle", fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0, lineSpacingMultiple: 1.22 });
+
+  // Formula: variance adds under subtraction
+  formulaBox(s, "Var(τ̂) = Var(μ̂₀) + Var(μ̂₁)", 0.6, 2.47, 6.35, 0.68, { fill: NAVY_DK, size: 16 });
+  s.addText("Two independently-fit models ⇒ subtracting them doesn't cancel their errors, it adds them. And a model's variance shrinks as its training sample n grows — fewer rows means a noisier model.", {
+    x: 7.15, y: 2.47, w: 5.55, h: 0.68, valign: "middle", fontFace: BODY_FONT, fontSize: 11.5, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.18,
+  });
+
+  // Two comparison cards: balanced vs. our real imbalance
+  const cw = 5.85, x1 = 0.6, x2 = 6.85, top = 3.4, ch = 2.0;
+  s.addShape("roundRect", { x: x1, y: top, w: cw, h: ch, rectRadius: 0.1, fill: { color: GREEN_BG }, line: { color: GREEN, width: 1.3 } });
+  s.addText("✓  If receive_offer Were 50/50", { x: x1 + 0.3, y: top + 0.2, w: cw - 0.6, h: 0.4, fontFace: HEAD_FONT, fontSize: 15.5, bold: true, color: GREEN, isTextBox: true, margin: 0 });
+  s.addText([
+    { text: "n₀ ≈ n₁ ", options: { bold: true, color: NAVY } }, { text: "— both models see plenty of data.\n", options: { color: BODY } },
+    { text: "Var(μ̂₀) ≈ Var(μ̂₁) ", options: { bold: true, color: NAVY } }, { text: "— both reasonably precise.\n", options: { color: BODY } },
+    { text: "Var(τ̂) = small + small ", options: { bold: true, color: NAVY } }, { text: "— still small.\n", options: { color: BODY } },
+    { text: "→ T-Learner's subtraction is safe.", options: { bold: true, color: GREEN } },
+  ], { x: x1 + 0.3, y: top + 0.68, w: cw - 0.6, h: ch - 0.85, fontFace: BODY_FONT, fontSize: 12.5, isTextBox: true, margin: 0, lineSpacingMultiple: 1.35 });
+
+  s.addShape("roundRect", { x: x2, y: top, w: cw, h: ch, rectRadius: 0.1, fill: { color: RED_BG }, line: { color: RED, width: 1.3 } });
+  s.addText("✗  Our Real Setup — Control ≈70% / Treatment ≈30%", { x: x2 + 0.3, y: top + 0.2, w: cw - 0.6, h: 0.4, fontFace: HEAD_FONT, fontSize: 14, bold: true, color: RED, isTextBox: true, margin: 0 });
+  s.addText([
+    { text: "n₁ (treatment) is small ", options: { bold: true, color: NAVY } }, { text: "— μ̂₁ trains on few rows.\n", options: { color: BODY } },
+    { text: "Var(μ̂₁) is large ", options: { bold: true, color: NAVY } }, { text: "— μ̂₁ is noisy.\n", options: { color: BODY } },
+    { text: "Var(τ̂) = small + LARGE ", options: { bold: true, color: NAVY } }, { text: "— dominated by μ̂₁.\n", options: { color: BODY } },
+    { text: "→ every τ(x) inherits μ̂₁'s noise.", options: { bold: true, color: RED } },
+  ], { x: x2 + 0.3, y: top + 0.68, w: cw - 0.6, h: ch - 0.85, fontFace: BODY_FONT, fontSize: 12.5, isTextBox: true, margin: 0, lineSpacingMultiple: 1.35 });
+
+  // Takeaway — bridges to the X-Learner section
+  const tk_top = top + ch + 0.18, tk_h = 1.35;
+  s.addShape("roundRect", { x: 0.6, y: tk_top, w: 12.1, h: tk_h, rectRadius: 0.08, fill: { color: NAVY_DK }, line: { type: "none" } });
+  s.addText([
+    { text: "So what does X-Learner actually fix?  ", options: { bold: true, color: GOLD } },
+    { text: "Not a better model for the small arm — it stops asking μ̂₁ to predict outcomes for everyone. For each treated customer it uses their own real, observed Applied outcome, and only needs μ̂₀ (the reliable, large-sample model) to estimate the counterfactual. The minority arm's job shrinks from “run a whole noisy model on every customer” down to “fit one more regression on a small-but-real dataset.” Next: how that actually works, layer by layer.", options: { color: WHITE } },
+  ], { x: 0.95, y: tk_top, w: 11.4, h: tk_h, valign: "middle", fontFace: BODY_FONT, fontSize: 11.5, isTextBox: true, margin: 0, lineSpacingMultiple: 1.22 });
+
+  pageNum(s, 7);
+}
+
+// ---------------------------------------------------------------------------
+// Slide 8 — Comparison table + why X-learner
 // ---------------------------------------------------------------------------
 {
   const s = newSlide(WHITE);
@@ -449,11 +500,11 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   ], {
     x: 0.95, y: 5.5, w: 11.4, h: 1.35, valign: "middle", fontFace: BODY_FONT, fontSize: 13, isTextBox: true, margin: 0, lineSpacingMultiple: 1.25,
   });
-  pageNum(s, 7);
+  pageNum(s, 8);
 }
 
 // ---------------------------------------------------------------------------
-// Slide 8 — X-Learner architecture (4-layer flow)
+// Slide 9 — X-Learner architecture (4-layer flow)
 // ---------------------------------------------------------------------------
 {
   const s = newSlide(WHITE);
@@ -484,11 +535,11 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   s.addText("Layers 1–3 are model training. Layer 4 happens at scoring time, for every customer.", {
     x: 0.6, y: top + bh + 0.55, w: 12.1, h: 0.4, align: "center", fontFace: BODY_FONT, fontSize: 12.5, italic: true, color: MUTED, isTextBox: true, margin: 0,
   });
-  pageNum(s, 8);
+  pageNum(s, 9);
 }
 
 // ---------------------------------------------------------------------------
-// Slide 9 — Layer 1: two outcome models
+// Slide 10 — Layer 1: two outcome models
 // ---------------------------------------------------------------------------
 {
   const s = newSlide(WHITE);
@@ -535,16 +586,16 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     fontFace: BODY_FONT, fontSize: 12.5, border: { type: "solid", color: "E4E7F0", pt: 1 },
     autoPage: false, margin: [0.05, 0.1, 0.05, 0.1], rowH: 0.47,
   });
-  pageNum(s, 9);
+  pageNum(s, 10);
 }
 
 // ---------------------------------------------------------------------------
-// Slide 10 — Layer 2: pseudo effects
+// Slide 11 — Layer 2: pseudo effects
 // ---------------------------------------------------------------------------
 {
   const s = newSlide(WHITE);
   header(s, "Layer 2 of 4", "Constructing Two Pseudo Effects");
-  s.addText("X-Learner doesn't use μ̂₁ − μ̂₀ directly — it first imputes each unit's likely effect using the OTHER arm's model as counterfactual. (Y = 1 if the customer applied for the card, 0 if not.)", {
+  s.addText("X-Learner doesn't use μ̂₁ − μ̂₀ directly — it first imputes each unit's likely effect using the OTHER arm's model as counterfactual. (Applied = 1 if the customer applied for the card, 0 if not.)", {
     x: 0.6, y: 1.55, w: 12.1, h: 0.55, fontFace: BODY_FONT, fontSize: 13, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
   });
 
@@ -579,15 +630,18 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   s.addTable(ctrlRows, { x: x1, y: ytop + 1.1, w: colW, h: 1.9, colW: [1.3, 1.5, 1.3, 1.75], fontFace: BODY_FONT, fontSize: 13, border: { type: "solid", color: "E4E7F0", pt: 1 }, autoPage: false, margin: [0.05, 0.05, 0.05, 0.05], rowH: 0.46 });
   s.addTable(trtRows, { x: x2, y: ytop + 1.1, w: colW, h: 1.9, colW: [1.3, 1.3, 1.5, 1.75], fontFace: BODY_FONT, fontSize: 13, border: { type: "solid", color: "E4E7F0", pt: 1 }, autoPage: false, margin: [0.05, 0.05, 0.05, 0.05], rowH: 0.46 });
 
-  s.addShape("roundRect", { x: 0.6, y: ytop + 3.25, w: 12.1, h: 0.85, rectRadius: 0.06, fill: { color: NAVY_DK }, line: { type: "none" } });
-  s.addText("These are continuous, signed numbers — not 0/1 labels. Each one is a single unit's best available estimate of its own treatment effect, and each becomes a training label in Layer 3.", {
-    x: 0.9, y: ytop + 3.25, w: 11.5, h: 0.85, valign: "middle", fontFace: BODY_FONT, fontSize: 12.5, color: WHITE, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
+  s.addShape("roundRect", { x: 0.6, y: ytop + 3.2, w: 12.1, h: 1.15, rectRadius: 0.06, fill: { color: NAVY_DK }, line: { type: "none" } });
+  s.addText([
+    { text: "Why this beats a raw μ̂₁ − μ̂₀:  ", options: { bold: true, color: GOLD } },
+    { text: "for a treated customer we don't need a model to guess their outcome — we use their own real, observed Applied value, and only borrow μ̂₀ (fit on the large control group) to estimate what would've happened without the offer. The minority (treatment) arm no longer needs a full noisy model of its own — just one more regression on these pseudo effects. These are continuous, signed numbers, not 0/1 labels, and each becomes a training label in Layer 3.", options: { color: WHITE } },
+  ], {
+    x: 0.9, y: ytop + 3.2, w: 11.5, h: 1.15, valign: "middle", fontFace: BODY_FONT, fontSize: 11.5, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
   });
-  pageNum(s, 10);
+  pageNum(s, 11);
 }
 
 // ---------------------------------------------------------------------------
-// Slide 11 — Training vs Scoring (the "what did A participate in" nuance)
+// Slide 12 — Training vs Scoring (the "what did A participate in" nuance)
 // ---------------------------------------------------------------------------
 {
   const s = newSlide(WHITE);
@@ -614,11 +668,11 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     { text: "Why this matters:  ", options: { bold: true, color: GOLD } },
     { text: "it's what makes X-Learner one unified scorer instead of two disconnected ones — every customer, regardless of which arm they were actually in, gets a single fused uplift score at the end.", options: { color: WHITE } },
   ], { x: 0.9, y: top + ch + 0.35, w: 11.5, h: 0.95, valign: "middle", fontFace: BODY_FONT, fontSize: 12.5, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2 });
-  pageNum(s, 11);
+  pageNum(s, 12);
 }
 
 // ---------------------------------------------------------------------------
-// Slide 12 — Layer 3: two effect models
+// Slide 13 — Layer 3: two effect models
 // ---------------------------------------------------------------------------
 {
   const s = newSlide(WHITE);
@@ -636,47 +690,50 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   s.addText("Effect Model T", { x: x2 + 0.3, y: top + 0.18, w: cw - 0.6, h: 0.4, fontFace: HEAD_FONT, fontSize: 16, bold: true, color: GOLD, isTextBox: true, margin: 0 });
   s.addText("Input X → predicts τT(x). Learned the pattern in the treatment-side pseudo effects.", { x: x2 + 0.3, y: top + 0.62, w: cw - 0.6, h: 0.8, fontFace: BODY_FONT, fontSize: 12.5, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2 });
 
-  s.addShape("roundRect", { x: 0.6, y: top + ch + 0.3, w: 12.1, h: 0.55, rectRadius: 0.06, fill: { color: ICE_LT }, line: { type: "none" } });
-  s.addText("What they output: “how big is this customer's incremental effect” — not “how likely are they to respond.”", {
-    x: 0.85, y: top + ch + 0.3, w: 11.6, h: 0.55, valign: "middle", fontFace: BODY_FONT, fontSize: 12.5, italic: true, color: NAVY, isTextBox: true, margin: 0,
-  });
+  s.addShape("roundRect", { x: 0.6, y: top + ch + 0.2, w: 12.1, h: 0.85, rectRadius: 0.06, fill: { color: ICE_LT }, line: { type: "none" } });
+  s.addText([
+    { text: "What they output: ", options: { bold: true, color: NAVY } },
+    { text: "“how big is this customer's incremental effect” — not “how likely are they to respond.” ", options: { color: NAVY } },
+    { text: "Why two of them: ", options: { bold: true, color: NAVY } },
+    { text: "each is trained on a different pseudo-effect sample — τC on the large control-side sample, τT on the small treatment-side one — so neither is fully trustworthy alone. Layer 4 decides how much to lean on each.", options: { color: NAVY } },
+  ], { x: 0.85, y: top + ch + 0.2, w: 11.6, h: 0.85, valign: "middle", fontFace: BODY_FONT, fontSize: 11.5, isTextBox: true, margin: 0, lineSpacingMultiple: 1.22 });
 
-  const wy = top + ch + 1.1;
-  s.addText("Worked example — a new customer, G, scored by both:", { x: 0.6, y: wy, w: 12.1, h: 0.4, fontFace: BODY_FONT, fontSize: 13.5, bold: true, color: NAVY, isTextBox: true, margin: 0 });
+  const wy = top + ch + 1.2;
+  s.addText("Worked example — a new customer, G, scored by both:", { x: 0.6, y: wy, w: 12.1, h: 0.35, fontFace: BODY_FONT, fontSize: 13, bold: true, color: NAVY, isTextBox: true, margin: 0 });
 
-  const bw = 2.7, bh = 1.3, bgap = 0.6, bx = (PW - bw * 2 - bgap) / 2, by = wy + 0.55;
+  const bw = 2.7, bh = 1.1, bgap = 0.6, bx = (PW - bw * 2 - bgap) / 2, by = wy + 0.42;
   s.addShape("roundRect", { x: bx, y: by, w: bw, h: bh, rectRadius: 0.08, fill: { color: GREEN }, line: { type: "none" } });
-  s.addText("τC(G)", { x: bx, y: by + 0.15, w: bw, h: 0.4, align: "center", fontFace: BODY_FONT, fontSize: 13, color: WHITE, isTextBox: true, margin: 0 });
-  s.addText("0.12", { x: bx, y: by + 0.5, w: bw, h: 0.7, align: "center", fontFace: HEAD_FONT, fontSize: 32, bold: true, color: WHITE, isTextBox: true, margin: 0 });
+  s.addText("τC(G)", { x: bx, y: by + 0.12, w: bw, h: 0.32, align: "center", fontFace: BODY_FONT, fontSize: 12.5, color: WHITE, isTextBox: true, margin: 0 });
+  s.addText("0.12", { x: bx, y: by + 0.42, w: bw, h: 0.6, align: "center", fontFace: HEAD_FONT, fontSize: 27, bold: true, color: WHITE, isTextBox: true, margin: 0 });
 
   s.addShape("roundRect", { x: bx + bw + bgap, y: by, w: bw, h: bh, rectRadius: 0.08, fill: { color: GOLD }, line: { type: "none" } });
-  s.addText("τT(G)", { x: bx + bw + bgap, y: by + 0.15, w: bw, h: 0.4, align: "center", fontFace: BODY_FONT, fontSize: 13, color: WHITE, isTextBox: true, margin: 0 });
-  s.addText("0.28", { x: bx + bw + bgap, y: by + 0.5, w: bw, h: 0.7, align: "center", fontFace: HEAD_FONT, fontSize: 32, bold: true, color: WHITE, isTextBox: true, margin: 0 });
+  s.addText("τT(G)", { x: bx + bw + bgap, y: by + 0.12, w: bw, h: 0.32, align: "center", fontFace: BODY_FONT, fontSize: 12.5, color: WHITE, isTextBox: true, margin: 0 });
+  s.addText("0.28", { x: bx + bw + bgap, y: by + 0.42, w: bw, h: 0.6, align: "center", fontFace: HEAD_FONT, fontSize: 27, bold: true, color: WHITE, isTextBox: true, margin: 0 });
 
   s.addText("Two different estimates of the same customer's uplift — neither is the final answer yet.", {
-    x: 0.6, y: by + bh + 0.15, w: 12.1, h: 0.4, align: "center", italic: true, fontFace: BODY_FONT, fontSize: 12, color: MUTED, isTextBox: true, margin: 0,
+    x: 0.6, y: by + bh + 0.12, w: 12.1, h: 0.35, align: "center", italic: true, fontFace: BODY_FONT, fontSize: 11.5, color: MUTED, isTextBox: true, margin: 0,
   });
-  pageNum(s, 12);
+  pageNum(s, 13);
 }
 
 // ---------------------------------------------------------------------------
-// Slide 13 — Layer 4: weighted fusion
+// Slide 14 — Layer 4: weighted fusion
 // ---------------------------------------------------------------------------
 {
   const s = newSlide(WHITE);
   header(s, "Layer 4 of 4", "Weighted Fusion");
   formulaBox(s, "τ(x) = g(x)·τT(x) + (1 − g(x))·τC(x)", 0.6, 1.6, 12.1, 0.75, { fill: NAVY, size: 20, align: "center" });
-  s.addText("g(x) is the propensity score — how much to trust the treatment-side estimate vs. the control-side one for this customer.", {
-    x: 0.6, y: 2.5, w: 12.1, h: 0.45, align: "center", italic: true, fontFace: BODY_FONT, fontSize: 12.5, color: MUTED, isTextBox: true, margin: 0,
+  s.addText("g(x) is the propensity score. τC and τT were each built from a different-sized sample with a different kind of noise (previous slide) — neither is fully reliable alone. g(x) is how the model calibrates how much to lean on each, instead of trusting just one arm's estimate.", {
+    x: 0.6, y: 2.48, w: 12.1, h: 0.62, align: "center", italic: true, fontFace: BODY_FONT, fontSize: 11.5, color: MUTED, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
   });
 
-  s.addText("Worked example, continuing with customer G:", { x: 0.6, y: 3.15, w: 12.1, h: 0.4, fontFace: BODY_FONT, fontSize: 13.5, bold: true, color: NAVY, isTextBox: true, margin: 0 });
+  s.addText("Worked example, continuing with customer G:", { x: 0.6, y: 3.28, w: 12.1, h: 0.35, fontFace: BODY_FONT, fontSize: 13, bold: true, color: NAVY, isTextBox: true, margin: 0 });
 
   const rows = [
     ["τT(G)", "0.28", "×", "g(G)", "0.7", "=", "0.196"],
     ["τC(G)", "0.12", "×", "1 − g(G)", "0.3", "=", "0.036"],
   ];
-  const y0 = 3.65, rh = 0.62;
+  const y0 = 3.75, rh = 0.6;
   rows.forEach((r, i) => {
     const y = y0 + i * (rh + 0.15);
     s.addShape("roundRect", { x: 0.6, y, w: 8.9, h: rh, rectRadius: 0.06, fill: { color: i === 0 ? GOLD_BG : GREEN_BG }, line: { type: "none" } });
@@ -699,11 +756,11 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   s.addText("0.196 + 0.036 = 0.232 — this single number is what gets ranked, thresholded, and acted on. Everything before this slide exists to produce it responsibly.", {
     x: 0.9, y: 5.55, w: 11.5, h: 0.85, valign: "middle", fontFace: BODY_FONT, fontSize: 13, color: NAVY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
   });
-  pageNum(s, 13);
+  pageNum(s, 14);
 }
 
 // ---------------------------------------------------------------------------
-// Slide 14 — Validation
+// Slide 15 — Validation
 // ---------------------------------------------------------------------------
 {
   const s = newSlide(WHITE);
@@ -729,11 +786,11 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     s.addText(st.l, { x: stx + 2.05, y: sy + 0.14, w: stw - 2.3, h: sh - 0.28, valign: "middle", fontFace: BODY_FONT, fontSize: 10.5, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.15 });
     sy += sh + 0.22;
   });
-  pageNum(s, 14);
+  pageNum(s, 15);
 }
 
 // ---------------------------------------------------------------------------
-// Slide 15 — From score to decision
+// Slide 16 — From score to decision
 // ---------------------------------------------------------------------------
 {
   const s = newSlide(WHITE);
@@ -783,11 +840,11 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   s.addText("Uplift modeling reveals the real, exploitable heterogeneity hiding underneath that flat average.", {
     x: 7.35, y: 4.8, w: 5.0, h: 1.0, fontFace: HEAD_FONT, fontSize: 15.5, bold: true, color: WHITE, isTextBox: true, margin: 0, lineSpacingMultiple: 1.3,
   });
-  pageNum(s, 15);
+  pageNum(s, 16);
 }
 
 // ---------------------------------------------------------------------------
-// Slide 16 — One-minute answer + closing
+// Slide 17 — One-minute answer + closing
 // ---------------------------------------------------------------------------
 {
   const s = newSlide(NAVY);
@@ -828,7 +885,7 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     "3. Train two effect models on these pseudo effects. Their output is a continuous uplift score, not a response probability.\n" +
     "4. Finally, blend the two effect models with a weight g(x) into the final uplift score, used for ranking and targeting. The benefit: you're not just looking at who's most likely to respond, but who will produce the biggest incremental response because of the offer."
   );
-  pageNum(s, 16);
+  pageNum(s, 17);
 }
 
 pres.writeFile({ fileName: "uplift_model_deck.pptx" }).then(() => console.log("deck written"));
