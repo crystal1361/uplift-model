@@ -135,7 +135,7 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   const s = newSlide(WHITE);
   header(s, "The Core Idea", "Not “Who Responds” — “Who Responds Because of Us”");
   s.addText(
-    "A response model predicts who's likely to respond — but that includes people who'd say yes with no offer at all. An uplift model predicts the incremental effect of the offer itself, so targeting can focus on the one segment where the offer changes the outcome.",
+    "A response model predicts who's likely to respond — but that includes people who'd apply on the existing offer anyway. An uplift model predicts the incremental effect of switching someone to the new offer, so targeting can focus on the one segment where the new offer actually changes the outcome.",
     { x: 0.6, y: 1.5, w: 5.7, h: 1.7, fontFace: BODY_FONT, fontSize: 13.5, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.25 }
   );
   s.addText([
@@ -147,9 +147,9 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   s.addShape("roundRect", { x: 0.6, y: 4.0, w: 5.7, h: 0.85, rectRadius: 0.06, fill: { color: ICE_LT }, line: { type: "none" } });
   s.addText([
     { text: "In our prescreen example:  ", options: { bold: true, color: NAVY } },
-    { text: "Y (our Applied column) = 1 if the customer applies for the credit card, 0 if not.  T (our receive_offer column) = 1 if they received the prescreen mail offer (treatment), 0 if held out (control).", options: { color: BODY } },
-  ], { x: 0.85, y: 4.0, w: 5.35, h: 0.85, valign: "middle", fontFace: BODY_FONT, fontSize: 11.5, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2 });
-  s.addText("the treatment effect — not the response probability — is the thing we're trying to score.", {
+    { text: "Y (our Applied column) = 1 if the customer applies for the credit card, 0 if not.  T (our new_offer column) = 1 if they received the new offer variant (treatment), 0 if they received the existing offer (control) — everyone gets an offer, this is old vs. new.", options: { color: BODY } },
+  ], { x: 0.85, y: 4.0, w: 5.35, h: 0.85, valign: "middle", fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2 });
+  s.addText("τ(x) — our uplift score — is the treatment effect we're trying to estimate, not the raw response probability.", {
     x: 0.6, y: 4.95, w: 5.7, h: 0.45, fontFace: BODY_FONT, fontSize: 11, italic: true, color: MUTED, isTextBox: true, margin: 0,
   });
 
@@ -157,10 +157,10 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   const gx = 6.7, gy = 1.5, gw = 5.9, gh = 5.35;
   const cw = gw / 2, ch = gh / 2, pad = 0.12;
   const quads = [
-    { t: "Persuadables", d: "Apply only if they get the offer (Y=1 under T=1, Y=0 under T=0) — the offer changes their decision. This is the target segment.", fill: GREEN_BG, tc: GREEN },
-    { t: "Sure Things", d: "Apply either way (Y=1 regardless of T). Mailing them is wasted budget.", fill: ICE_LT, tc: NAVY },
-    { t: "Lost Causes", d: "Never apply, offer or not (Y=0 regardless of T). Nothing to gain.", fill: "F2F2F5", tc: MUTED },
-    { t: "Sleeping Dogs", d: "Apply LESS often if they get the offer — the mailing backfires.", fill: RED_BG, tc: RED },
+    { t: "Persuadables", d: "Apply only with the new offer (Y=1 under T=1, Y=0 under T=0) — switching the offer changes their decision. This is the target segment.", fill: GREEN_BG, tc: GREEN },
+    { t: "Sure Things", d: "Apply on either offer (Y=1 regardless of T). Giving them the new offer is wasted — the old one would've worked too.", fill: ICE_LT, tc: NAVY },
+    { t: "Lost Causes", d: "Never apply, old or new offer (Y=0 regardless of T). Nothing to gain.", fill: "F2F2F5", tc: MUTED },
+    { t: "Sleeping Dogs", d: "Apply LESS often with the new offer than they would have with the old one — the new offer backfires.", fill: RED_BG, tc: RED },
   ];
   quads.forEach((q, i) => {
     const cx = gx + (i % 2) * (cw + pad);
@@ -179,9 +179,9 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   const s = newSlide(WHITE);
   header(s, "Estimation Strategies", "Three Ways to Estimate an Uplift Score");
   const cards = [
-    { t: "S-Learner", sub: "Single model", d: "One model, receive_offer (got the offer, 1/0) as just another input feature. τ(x) = f(x,1) − f(x,0), where 1/0 flips whether the offer was sent.", fill: ICE_LT, badge: null },
-    { t: "T-Learner", sub: "Two models", d: "Two fully separate models, one per arm. τ(x) = μ̂₁(x) − μ̂₀(x), where μ̂₁ is the offer-group model and μ̂₀ is the no-offer (control) model.", fill: ICE_LT, badge: null },
-    { t: "X-Learner", sub: "Cross-learning", d: "Two outcome models feed two effect models, combined by a weight g(x). Same Applied and receive_offer columns as above.", fill: GOLD_BG, badge: "Used here" },
+    { t: "S-Learner", sub: "Single model", d: "One model, new_offer (old vs. new offer, 1/0) as just another input feature. τ(x) = f(x,1) − f(x,0) — our uplift score — where 1/0 flips which offer they got.", fill: ICE_LT, badge: null },
+    { t: "T-Learner", sub: "Two models", d: "Two fully separate outcome models, one per arm. τ(x) = μ̂₁(x) − μ̂₀(x), where μ̂₁ is the new-offer outcome model and μ̂₀ is the old-offer (control) outcome model.", fill: ICE_LT, badge: null },
+    { t: "X-Learner", sub: "Cross-learning", d: "Two outcome models feed two effect models, combined by a weight g(x). Same Applied and new_offer columns as above.", fill: GOLD_BG, badge: "Used here" },
   ];
   const cw = 3.85, gap = 0.3, top = 1.85, ch = 4.9;
   const startX = (PW - (cw * 3 + gap * 2)) / 2;
@@ -217,7 +217,7 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   ], { x: x1 + 0.25, y: top + 0.14, w: cw - 0.5, h: 0.28, fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0 });
   {
     const tw = cw - 0.5, ty = top + 0.5, th = ch - 0.65;
-    const head = ["Customer", "receive_offer", "Applied"].map(t => ({ text: t, options: { fill: { color: NAVY }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
+    const head = ["Customer", "new_offer", "Applied"].map(t => ({ text: t, options: { fill: { color: NAVY }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
     const data = [["A", "0", "0"], ["B", "0", "1"], ["C", "0", "0"], ["D", "1", "1"], ["E", "1", "0"], ["F", "1", "1"]];
     const rows = [head, ...data.map((r, i) => r.map((v, j) => ({
       text: v,
@@ -234,7 +234,7 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   s.addShape("roundRect", { x: x2, y: top, w: cw, h: ch, rectRadius: 0.1, fill: { color: GOLD_BG }, line: { color: GOLD, width: 1 } });
   s.addText([
     { text: "SCORE   ", options: { bold: true, color: GOLD } },
-    { text: "one model, run for BOTH mailing scenarios on customer G", options: { color: MUTED, italic: true } },
+    { text: "one model, run for BOTH offer scenarios on customer G", options: { color: MUTED, italic: true } },
   ], { x: x2 + 0.25, y: top + 0.14, w: cw - 0.5, h: 0.28, fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0 });
   {
     const ty = top + 0.5;
@@ -246,7 +246,7 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     const finalH = (top + ch - 0.15) - finalY;
 
     function scenarioPair(y, offerVal, offerColor, rowBg, output) {
-      const inHead = ["Customer", "receive_offer"].map(t => ({ text: t, options: { fill: { color: NAVY }, color: WHITE, bold: true, align: "center", valign: "middle", fontSize: 8.5 } }));
+      const inHead = ["Customer", "new_offer"].map(t => ({ text: t, options: { fill: { color: NAVY }, color: WHITE, bold: true, align: "center", valign: "middle", fontSize: 8.5 } }));
       const inRow = [
         { text: "G", options: { align: "center", valign: "middle", bold: true, color: NAVY, fill: { color: rowBg } } },
         { text: String(offerVal), options: { align: "center", valign: "middle", bold: true, color: offerColor, fill: { color: rowBg } } },
@@ -284,7 +284,7 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
 
   s.addShape("roundRect", { x: x2, y: pc_top, w: cw, h: pc_h, rectRadius: 0.1, fill: { color: RED_BG }, line: { type: "none" } });
   s.addText("−  Cons", { x: x2 + 0.3, y: pc_top + 0.14, w: cw - 0.6, h: 0.32, fontFace: HEAD_FONT, fontSize: 14.5, bold: true, color: RED, isTextBox: true, margin: 0 });
-  s.addText("Regularization has no reason to favor one receive_offer feature over dozens of stronger predictors — treatment can get nearly ignored.", {
+  s.addText("Regularization has no reason to favor one new_offer feature over dozens of stronger predictors — the offer signal can get nearly ignored.", {
     x: x2 + 0.3, y: pc_top + 0.5, w: cw - 0.6, h: pc_h - 0.65, fontFace: BODY_FONT, fontSize: 11.5, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
   });
 
@@ -292,7 +292,7 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   s.addShape("roundRect", { x: 0.6, y: why_top, w: 12.1, h: why_h, rectRadius: 0.08, fill: { color: NAVY_DK }, line: { type: "none" } });
   s.addText([
     { text: "Why not chosen:  ", options: { bold: true, color: GOLD } },
-    { text: "baseline behavioral features — utilization, tenure, balances — predict response far better than the offer itself. A pooled model leans on those and treats receive_offer as noise, exactly the risk we can't take when isolating the offer's effect is the whole point.", options: { color: WHITE } },
+    { text: "baseline behavioral features — utilization, tenure, balances — predict response far better than which offer they got. A pooled model leans on those and treats new_offer as noise, exactly the risk we can't take when isolating the new offer's effect is the whole point.", options: { color: WHITE } },
   ], { x: 0.95, y: why_top, w: 11.4, h: why_h, valign: "middle", fontFace: BODY_FONT, fontSize: 12.5, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2 });
 
   pageNum(s, 5);
@@ -316,14 +316,14 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   {
     const innerW = cw - 0.5, gap = 0.2, miniW = (innerW - gap) / 2;
     const mx1 = x1 + 0.25, mx2 = mx1 + miniW + gap, labelY = top + 0.5, tableY = top + 0.74, tableH = ch - 0.89;
-    s.addText("Control (A,B,C)  →  μ̂₀", { x: mx1, y: labelY, w: miniW, h: 0.24, fontFace: BODY_FONT, fontSize: 10, bold: true, color: NAVY, isTextBox: true, margin: 0 });
+    s.addText("Control (A,B,C) → μ̂₀ model", { x: mx1, y: labelY, w: miniW, h: 0.24, fontFace: BODY_FONT, fontSize: 10, bold: true, color: NAVY, isTextBox: true, margin: 0 });
     const ctrlHead = ["Customer", "Applied"].map(t => ({ text: t, options: { fill: { color: NAVY }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
     const ctrlRows = [ctrlHead, ...[["A", "0"], ["B", "1"], ["C", "0"]].map((r, i) => r.map((v, j) => ({
       text: v, options: { align: "center", valign: "middle", bold: j === 0, color: BODY, fill: { color: i % 2 === 0 ? WHITE : "F4F6FB" } },
     })))];
     s.addTable(ctrlRows, { x: mx1, y: tableY, w: miniW, h: tableH, colW: [miniW * 0.5, miniW * 0.5], fontFace: BODY_FONT, fontSize: 10.5, border: { type: "solid", color: "E4E7F0", pt: 1 }, autoPage: false, margin: [0.02, 0.04, 0.02, 0.04], rowH: tableH / 4 });
 
-    s.addText("Treatment (D,E,F)  →  μ̂₁", { x: mx2, y: labelY, w: miniW, h: 0.24, fontFace: BODY_FONT, fontSize: 10, bold: true, color: GOLD, isTextBox: true, margin: 0 });
+    s.addText("Treatment (D,E,F) → μ̂₁ model", { x: mx2, y: labelY, w: miniW, h: 0.24, fontFace: BODY_FONT, fontSize: 10, bold: true, color: GOLD, isTextBox: true, margin: 0 });
     const trtHead = ["Customer", "Applied"].map(t => ({ text: t, options: { fill: { color: GOLD }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
     const trtRows = [trtHead, ...[["D", "1"], ["E", "0"], ["F", "1"]].map((r, i) => r.map((v, j) => ({
       text: v, options: { align: "center", valign: "middle", bold: j === 0, color: BODY, fill: { color: i % 2 === 0 ? WHITE : "F4F6FB" } },
@@ -393,9 +393,9 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   s.addShape("roundRect", { x: 0.6, y: why_top, w: 12.1, h: why_h, rectRadius: 0.08, fill: { color: NAVY_DK }, line: { type: "none" } });
   s.addText([
     { text: "Why not chosen:  ", options: { bold: true, color: GOLD } },
-    { text: "T-Learner isn't broken by design — if receive_offer were roughly 50/50, μ̂₀ and μ̂₁ would train on comparable sample sizes and subtracting two similarly-precise models wouldn't cost much. ", options: { color: WHITE } },
+    { text: "T-Learner isn't broken by design — if new_offer were roughly 50/50, μ̂₀ and μ̂₁ would train on comparable sample sizes and subtracting two similarly-precise models wouldn't cost much. ", options: { color: WHITE } },
     { text: "The problem is our specific setup: ", options: { bold: true, color: "C9D2F0" } },
-    { text: "about 70% of customers are held-out control (no offer) and only ~30% receive the mailed offer — you can't afford to mail everyone in a live campaign. That imbalance starves μ̂₁, the offer-side model, exactly where T-Learner needs it most: τ(x)=μ̂₁(x)−μ̂₀(x) inherits nearly all of μ̂₁'s extra noise. Closing that gap without needing a bigger treatment group is the reason X-Learner exists.", options: { color: WHITE } },
+    { text: "about 70% of customers stay on the existing offer (control) and only ~30% are rolled out to the new offer (treatment) — a deliberately smaller test slice to limit risk before scaling a new offer design. That imbalance starves μ̂₁, the new-offer-side model, exactly where T-Learner needs it most: τ(x)=μ̂₁(x)−μ̂₀(x) inherits nearly all of μ̂₁'s extra noise. Closing that gap without needing a bigger treatment group is the reason X-Learner exists.", options: { color: WHITE } },
   ], { x: 0.95, y: why_top, w: 11.4, h: why_h, valign: "middle", fontFace: BODY_FONT, fontSize: 12, isTextBox: true, margin: 0, lineSpacingMultiple: 1.22 });
 
   pageNum(s, 6);
@@ -412,7 +412,7 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   s.addShape("roundRect", { x: 0.6, y: 1.45, w: 12.1, h: 0.82, rectRadius: 0.06, fill: { color: ICE_LT }, line: { type: "none" } });
   s.addText([
     { text: "Notation:  ", options: { bold: true, color: NAVY } },
-    { text: "μ̂₀(x), μ̂₁(x) = the two outcome models — predicted P(Applied), without vs. with the offer.   τ(x) = μ̂₁(x) − μ̂₀(x) = the uplift score we're estimating.   n₀, n₁ = how many customers trained each model.   Var(·) = how noisy a model's predictions are — it shrinks as n grows.", options: { color: BODY } },
+    { text: "μ̂₀(x), μ̂₁(x) = the two outcome models — predicted P(Applied) under the old offer vs. the new offer.   τ(x) = μ̂₁(x) − μ̂₀(x) = the uplift score we're estimating.   n₀, n₁ = how many customers trained each model (sample size).   Var(·) = how noisy a model's predictions are — it shrinks as n grows.", options: { color: BODY } },
   ], { x: 0.85, y: 1.45, w: 11.6, h: 0.82, valign: "middle", fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0, lineSpacingMultiple: 1.22 });
 
   // Formula: variance adds under subtraction
@@ -424,7 +424,7 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   // Two comparison cards: balanced vs. our real imbalance
   const cw = 5.85, x1 = 0.6, x2 = 6.85, top = 3.4, ch = 2.0;
   s.addShape("roundRect", { x: x1, y: top, w: cw, h: ch, rectRadius: 0.1, fill: { color: GREEN_BG }, line: { color: GREEN, width: 1.3 } });
-  s.addText("✓  If receive_offer Were 50/50", { x: x1 + 0.3, y: top + 0.2, w: cw - 0.6, h: 0.4, fontFace: HEAD_FONT, fontSize: 15.5, bold: true, color: GREEN, isTextBox: true, margin: 0 });
+  s.addText("✓  If new_offer Were 50/50", { x: x1 + 0.3, y: top + 0.2, w: cw - 0.6, h: 0.4, fontFace: HEAD_FONT, fontSize: 15.5, bold: true, color: GREEN, isTextBox: true, margin: 0 });
   s.addText([
     { text: "n₀ ≈ n₁ ", options: { bold: true, color: NAVY } }, { text: "— both models see plenty of data.\n", options: { color: BODY } },
     { text: "Var(μ̂₀) ≈ Var(μ̂₁) ", options: { bold: true, color: NAVY } }, { text: "— both reasonably precise.\n", options: { color: BODY } },
@@ -433,7 +433,7 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   ], { x: x1 + 0.3, y: top + 0.68, w: cw - 0.6, h: ch - 0.85, fontFace: BODY_FONT, fontSize: 12.5, isTextBox: true, margin: 0, lineSpacingMultiple: 1.35 });
 
   s.addShape("roundRect", { x: x2, y: top, w: cw, h: ch, rectRadius: 0.1, fill: { color: RED_BG }, line: { color: RED, width: 1.3 } });
-  s.addText("✗  Our Real Setup — Control ≈70% / Treatment ≈30%", { x: x2 + 0.3, y: top + 0.2, w: cw - 0.6, h: 0.4, fontFace: HEAD_FONT, fontSize: 14, bold: true, color: RED, isTextBox: true, margin: 0 });
+  s.addText("✗  Our Real Setup — Old Offer ≈70% / New Offer ≈30%", { x: x2 + 0.3, y: top + 0.2, w: cw - 0.6, h: 0.4, fontFace: HEAD_FONT, fontSize: 14, bold: true, color: RED, isTextBox: true, margin: 0 });
   s.addText([
     { text: "n₁ (treatment) is small ", options: { bold: true, color: NAVY } }, { text: "— μ̂₁ trains on few rows.\n", options: { color: BODY } },
     { text: "Var(μ̂₁) is large ", options: { bold: true, color: NAVY } }, { text: "— μ̂₁ is noisy.\n", options: { color: BODY } },
@@ -446,7 +446,7 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   s.addShape("roundRect", { x: 0.6, y: tk_top, w: 12.1, h: tk_h, rectRadius: 0.08, fill: { color: NAVY_DK }, line: { type: "none" } });
   s.addText([
     { text: "So what does X-Learner actually fix?  ", options: { bold: true, color: GOLD } },
-    { text: "Not a better model for the small arm — it stops asking μ̂₁ to predict outcomes for everyone. For each treated customer it uses their own real, observed Applied outcome, and only needs μ̂₀ (the reliable, large-sample model) to estimate the counterfactual. The minority arm's job shrinks from “run a whole noisy model on every customer” down to “fit one more regression on a small-but-real dataset.” Next: how that actually works, layer by layer.", options: { color: WHITE } },
+    { text: "Not a better model for the small arm — it stops asking μ̂₁ to predict outcomes for everyone. For each new-offer customer it uses their own real, observed Applied outcome, and only needs μ̂₀ (the reliable, large-sample old-offer model) to estimate what would've happened under the old offer instead. The minority arm's job shrinks from “run a whole noisy model on every customer” down to “fit one more regression on a small-but-real dataset.” Next: how that actually works, layer by layer.", options: { color: WHITE } },
   ], { x: 0.95, y: tk_top, w: 11.4, h: tk_h, valign: "middle", fontFace: BODY_FONT, fontSize: 11.5, isTextBox: true, margin: 0, lineSpacingMultiple: 1.22 });
 
   pageNum(s, 7);
@@ -468,7 +468,7 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     ],
     [
       { text: "How effect\nis estimated", options: { bold: true, color: NAVY } },
-      { text: "Implicit — read off one shared model's receive_offer term", options: {} },
+      { text: "Implicit — read off one shared model's new_offer term", options: {} },
       { text: "Difference of two\nindependently-fit models", options: {} },
       { text: "Directly regresses on an\nimputed treatment effect", options: { fill: { color: GOLD_BG } } },
     ],
@@ -496,7 +496,7 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   s.addShape("roundRect", { x: 0.6, y: 5.5, w: 12.1, h: 1.35, rectRadius: 0.08, fill: { color: NAVY_DK }, line: { type: "none" } });
   s.addText([
     { text: "Our real constraint: ", options: { bold: true, color: GOLD } },
-    { text: "about 70% of customers are held-out control (no offer) and only ~30% receive the mailed offer — you can't afford to mail everyone in a live campaign. That's exactly T-Learner's weak point: μ̂₁, the offer-side model, is trained on the smaller group and is noisy. X-Learner's imputation step lets the offer-side effect estimate borrow strength from the reliable, well-estimated control-side model instead.", options: { color: WHITE } },
+    { text: "about 70% of customers stay on the existing offer (control) and only ~30% are rolled out to the new offer (treatment) — a deliberately smaller test slice to limit risk before scaling a new offer design. That's exactly T-Learner's weak point: μ̂₁, the new-offer-side model, is trained on the smaller group and is noisy. X-Learner's imputation step lets the new-offer-side effect estimate borrow strength from the reliable, well-estimated existing-offer-side model instead.", options: { color: WHITE } },
   ], {
     x: 0.95, y: 5.5, w: 11.4, h: 1.35, valign: "middle", fontFace: BODY_FONT, fontSize: 13, isTextBox: true, margin: 0, lineSpacingMultiple: 1.25,
   });
@@ -546,9 +546,9 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   header(s, "Layer 1 of 4", "Two Outcome Models");
   s.addText([
     { text: "Control outcome model  ", options: { bold: true, color: NAVY } },
-    { text: "learns μ̂₀(x) = E[Y(0) | X=x] — trained only on customers who did NOT get the offer.\n", options: { color: BODY } },
+    { text: "learns μ̂₀(x) = E[Y(0) | X=x] — trained only on customers who stayed on the existing offer (control).\n", options: { color: BODY } },
     { text: "Treatment outcome model  ", options: { bold: true, color: NAVY } },
-    { text: "learns μ̂₁(x) = E[Y(1) | X=x] — trained only on customers who DID get the offer. (Y = 1 if they applied for the card, 0 if not.)", options: { color: BODY } },
+    { text: "learns μ̂₁(x) = E[Y(1) | X=x] — trained only on customers who got the new offer (treatment). (Y = 1 if they applied for the card, 0 if not.)", options: { color: BODY } },
   ], { x: 0.6, y: 1.55, w: 12.1, h: 0.85, fontFace: BODY_FONT, fontSize: 13, isTextBox: true, margin: 0, lineSpacingMultiple: 1.28 });
 
   s.addShape("roundRect", { x: 0.6, y: 2.45, w: 12.1, h: 0.55, rectRadius: 0.06, fill: { color: ICE_LT }, line: { type: "none" } });
@@ -560,16 +560,16 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     x: 0.6, y: 3.2, w: 12.1, h: 0.35, fontFace: BODY_FONT, fontSize: 12.5, bold: true, color: NAVY, isTextBox: true, margin: 0,
   });
 
-  const header_row = ["Customer", "receive_offer", "Applied", "μ̂₀(x)\npred. Applied, no offer", "μ̂₁(x)\npred. Applied, w/ offer"].map(t => (
+  const header_row = ["Customer", "new_offer", "Applied", "μ̂₀(x)\npred. Applied, old offer", "μ̂₁(x)\npred. Applied, new offer"].map(t => (
     { text: t, options: { fill: { color: NAVY }, color: WHITE, bold: true, align: "center", valign: "middle" } }
   ));
   const data = [
-    ["A", "0 (control)", "0", "0.20", "0.55"],
-    ["B", "0 (control)", "1", "0.60", "0.75"],
-    ["C", "0 (control)", "0", "0.10", "0.30"],
-    ["D", "1 (offer sent)", "1", "0.35", "0.80"],
-    ["E", "1 (offer sent)", "0", "0.25", "0.40"],
-    ["F", "1 (offer sent)", "1", "0.50", "0.70"],
+    ["A", "0 (old offer)", "0", "0.20", "0.55"],
+    ["B", "0 (old offer)", "1", "0.60", "0.75"],
+    ["C", "0 (old offer)", "0", "0.10", "0.30"],
+    ["D", "1 (new offer)", "1", "0.35", "0.80"],
+    ["E", "1 (new offer)", "0", "0.25", "0.40"],
+    ["F", "1 (new offer)", "1", "0.50", "0.70"],
   ];
   const rows = [header_row, ...data.map((r, i) => r.map((v, j) => ({
     text: v,
@@ -633,7 +633,7 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   s.addShape("roundRect", { x: 0.6, y: ytop + 3.2, w: 12.1, h: 1.15, rectRadius: 0.06, fill: { color: NAVY_DK }, line: { type: "none" } });
   s.addText([
     { text: "Why this beats a raw μ̂₁ − μ̂₀:  ", options: { bold: true, color: GOLD } },
-    { text: "for a treated customer we don't need a model to guess their outcome — we use their own real, observed Applied value, and only borrow μ̂₀ (fit on the large control group) to estimate what would've happened without the offer. The minority (treatment) arm no longer needs a full noisy model of its own — just one more regression on these pseudo effects. These are continuous, signed numbers, not 0/1 labels, and each becomes a training label in Layer 3.", options: { color: WHITE } },
+    { text: "for a new-offer customer we don't need a model to guess their outcome — we use their own real, observed Applied value, and only borrow μ̂₀ (fit on the large old-offer group) to estimate what would've happened had they stayed on the old offer instead. The minority (treatment) arm no longer needs a full noisy model of its own — just one more regression on these pseudo effects. These are continuous, signed numbers, not 0/1 labels, and each becomes a training label in Layer 3.", options: { color: WHITE } },
   ], {
     x: 0.9, y: ytop + 3.2, w: 11.5, h: 1.15, valign: "middle", fontFace: BODY_FONT, fontSize: 11.5, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
   });
@@ -805,7 +805,7 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     [
       { text: "G", options: { align: "center", valign: "middle", bold: true, fill: { color: GREEN_BG } } },
       { text: "0.232", options: { align: "center", valign: "middle", bold: true, color: GREEN, fill: { color: GREEN_BG } } },
-      { text: "Mail — send first", options: { align: "center", valign: "middle", color: GREEN, fill: { color: GREEN_BG } } },
+      { text: "Switch to new offer — first", options: { align: "center", valign: "middle", color: GREEN, fill: { color: GREEN_BG } } },
     ],
     [
       { text: "H", options: { align: "center", valign: "middle", bold: true, fill: { color: GOLD_BG } } },
@@ -815,7 +815,7 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     [
       { text: "I", options: { align: "center", valign: "middle", bold: true, fill: { color: RED_BG } } },
       { text: "−0.02", options: { align: "center", valign: "middle", bold: true, color: RED, fill: { color: RED_BG } } },
-      { text: "Don't mail — offer likely backfires", options: { align: "center", valign: "middle", color: RED, fill: { color: RED_BG } } },
+      { text: "Keep old offer — new one likely backfires", options: { align: "center", valign: "middle", color: RED, fill: { color: RED_BG } } },
     ],
   ];
   s.addTable(rows, {
@@ -823,14 +823,14 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     fontFace: BODY_FONT, fontSize: 12, border: { type: "solid", color: "E4E7F0", pt: 1 },
     autoPage: false, margin: [0.06, 0.08, 0.06, 0.08], rowH: 0.65,
   });
-  s.addText("The final score drives three things: rank the file high-to-low, mail down to a budget cutoff, and treat a low or negative score as a decision NOT to spend — not just a low priority.", {
+  s.addText("The final score drives three things: rank the file high-to-low, roll out the new offer down to a budget/capacity cutoff, and treat a low or negative score as a decision to keep that customer on the old offer — not just a low priority.", {
     x: 0.6, y: 4.4, w: 6.0, h: 1.4, fontFace: BODY_FONT, fontSize: 12, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.25,
   });
 
   // right column: the real insight from the demo
   s.addShape("roundRect", { x: 7.0, y: 1.6, w: 5.7, h: 4.9, rectRadius: 0.1, fill: { color: NAVY }, line: { type: "none" } });
   s.addText("THE ARGUMENT FOR UPLIFT MODELING", { x: 7.35, y: 1.9, w: 5.0, h: 0.35, fontFace: BODY_FONT, fontSize: 11.5, bold: true, color: GOLD, charSpacing: 1.5, isTextBox: true, margin: 0 });
-  s.addText("In the full simulation, mailing everyone nets an overall incremental lift close to zero — persuadable gains are offset by sleeping-dog losses.", {
+  s.addText("In the full simulation, switching everyone to the new offer nets an overall incremental lift close to zero — persuadable gains are offset by sleeping-dog losses.", {
     x: 7.35, y: 2.35, w: 5.0, h: 1.1, fontFace: BODY_FONT, fontSize: 13, color: WHITE, isTextBox: true, margin: 0, lineSpacingMultiple: 1.25,
   });
   s.addText("A plain response model — or a simple before/after read — would look at that flat average and conclude the campaign doesn't work.", {
@@ -875,15 +875,15 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   s.addNotes(
     "1-minute Chinese answer (verbatim, for rehearsal):\n\n" +
     "X-learner 的流程是这样的：\n" +
-    "1. 先把历史实验数据分成 treatment 和 control 两组，分别训练两个 outcome model，一个学有 offer 时的结果，一个学没 offer 时的结果。\n" +
+    "1. 先把历史实验数据分成 treatment（新 offer）和 control（旧 offer）两组，分别训练两个 outcome model，一个学新 offer 下的结果，一个学旧 offer 下的结果。\n" +
     "2. 然后对每个样本做反事实预测，构造 pseudo effect：对 control 组样本，用 treatment model 预测值减真实结果；对 treatment 组样本，用真实结果减 control model 预测值。构造两类 pseudo effect（control-side pseudo effect, treatment-side pseudo effect）。\n" +
     "3. 接着用这些 pseudo effect 分别训练两个 effect model，effect model C 和 effect model T。它们输出的是连续的 uplift 分数，而不是回复概率。\n" +
-    "4. 最后再用一个权重 g(x) 把两个 effect model 的结果融合，得到最终 uplift，用来排序和选人。这样做的好处是，它不只是看谁最可能回复，而是看谁因为 offer 会产生最大的增量响应。\n\n" +
+    "4. 最后再用一个权重 g(x) 把两个 effect model 的结果融合，得到最终 uplift，用来排序和选人。这样做的好处是，它不只是看谁最可能回复，而是看谁因为换成新 offer 会产生最大的增量响应。\n\n" +
     "English equivalent:\n" +
-    "1. Split historical experiment data into treatment and control, train two outcome models — one for what happens with the offer, one without.\n" +
+    "1. Split historical experiment data into treatment (new offer) and control (old offer), train two outcome models — one for what happens with the new offer, one for the existing offer.\n" +
     "2. For each unit, do a counterfactual prediction to build a pseudo effect: for control units, treatment-model prediction minus actual outcome; for treatment units, actual outcome minus control-model prediction. Two kinds of pseudo effect result.\n" +
     "3. Train two effect models on these pseudo effects. Their output is a continuous uplift score, not a response probability.\n" +
-    "4. Finally, blend the two effect models with a weight g(x) into the final uplift score, used for ranking and targeting. The benefit: you're not just looking at who's most likely to respond, but who will produce the biggest incremental response because of the offer."
+    "4. Finally, blend the two effect models with a weight g(x) into the final uplift score, used for ranking and targeting. The benefit: you're not just looking at who's most likely to respond, but who will produce the biggest incremental response from switching to the new offer."
   );
   pageNum(s, 17);
 }
