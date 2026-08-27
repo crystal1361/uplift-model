@@ -726,42 +726,70 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
 {
   const s = newSlide(WHITE);
   header(s, "Layer 3 of 4", "Two Effect Models");
-  s.addText("The labels are now continuous effect values, not 0/1 — so both effect models are regressors, not classifiers.", {
-    x: 0.6, y: 1.55, w: 12.1, h: 0.45, fontFace: BODY_FONT, fontSize: 13, color: BODY, isTextBox: true, margin: 0,
-  });
+  s.addText([
+    { text: "τC and τT are regressors fit on the pseudo effects from Layer 2 — ", options: { color: BODY } },
+    { text: "unlike μ̂ or D̃, there's no closed-form formula for their output.", options: { bold: true, color: NAVY } },
+    { text: " Each score below is simply what the fitted model returns for a customer.", options: { color: BODY } },
+  ], { x: 0.6, y: 1.42, w: 12.1, h: 0.5, fontFace: BODY_FONT, fontSize: 12, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2 });
 
-  const cw = 5.85, x1 = 0.6, x2 = 6.85, top = 2.15, ch = 1.55;
-  s.addShape("roundRect", { x: x1, y: top, w: cw, h: ch, rectRadius: 0.1, fill: { color: GREEN_BG }, line: { type: "none" } });
-  s.addText("Effect Model C", { x: x1 + 0.3, y: top + 0.18, w: cw - 0.6, h: 0.4, fontFace: HEAD_FONT, fontSize: 16, bold: true, color: GREEN, isTextBox: true, margin: 0 });
-  s.addText("Input X → predicts τC(x). Learned the pattern in the control-side pseudo effects.", { x: x1 + 0.3, y: top + 0.62, w: cw - 0.6, h: 0.8, fontFace: BODY_FONT, fontSize: 12.5, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2 });
+  // TRAIN — each effect model fit on its own pseudo-effect sample
+  const trainTop = 2.0, trainH = 1.7;
+  s.addShape("roundRect", { x: 0.6, y: trainTop, w: 12.1, h: trainH, rectRadius: 0.1, fill: { color: ICE_LT }, line: { color: NAVY, width: 1 } });
+  s.addText([
+    { text: "TRAIN   ", options: { bold: true, color: NAVY } },
+    { text: "each effect model fit on its own pseudo-effect sample from Layer 2", options: { color: MUTED, italic: true } },
+  ], { x: 0.85, y: trainTop + 0.14, w: 11.6, h: 0.26, fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0 });
+  {
+    const innerW = 11.6, gap = 0.5, miniW = (innerW - gap) / 2;
+    const mx1 = 0.85, mx2 = mx1 + miniW + gap, labelY = trainTop + 0.48, tableY = trainTop + 0.72, tableH = trainH - 0.88;
+    s.addText("Control pseudo effects (A,B,C) → trains τC", { x: mx1, y: labelY, w: miniW, h: 0.22, fontFace: BODY_FONT, fontSize: 10.5, bold: true, color: GREEN, isTextBox: true, margin: 0 });
+    const cHead = ["Customer", "D̃ᶜ (label)"].map(t => ({ text: t, options: { fill: { color: GREEN }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
+    const cRows = [cHead, ...[["A", "0.55"], ["B", "−0.25"], ["C", "0.30"]].map((r, i) => r.map((v, j) => ({
+      text: v, options: { align: "center", valign: "middle", bold: j === 0, color: BODY, fill: { color: i % 2 === 0 ? WHITE : GREEN_BG } },
+    })))];
+    s.addTable(cRows, { x: mx1, y: tableY, w: miniW, h: tableH, colW: [miniW * 0.5, miniW * 0.5], fontFace: BODY_FONT, fontSize: 11, border: { type: "solid", color: "E4E7F0", pt: 1 }, autoPage: false, margin: [0.02, 0.05, 0.02, 0.05], rowH: tableH / 4 });
 
-  s.addShape("roundRect", { x: x2, y: top, w: cw, h: ch, rectRadius: 0.1, fill: { color: GOLD_BG }, line: { type: "none" } });
-  s.addText("Effect Model T", { x: x2 + 0.3, y: top + 0.18, w: cw - 0.6, h: 0.4, fontFace: HEAD_FONT, fontSize: 16, bold: true, color: GOLD, isTextBox: true, margin: 0 });
-  s.addText("Input X → predicts τT(x). Learned the pattern in the treatment-side pseudo effects.", { x: x2 + 0.3, y: top + 0.62, w: cw - 0.6, h: 0.8, fontFace: BODY_FONT, fontSize: 12.5, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2 });
+    s.addText("Treatment pseudo effects (D,E,F) → trains τT", { x: mx2, y: labelY, w: miniW, h: 0.22, fontFace: BODY_FONT, fontSize: 10.5, bold: true, color: GOLD, isTextBox: true, margin: 0 });
+    const tHead = ["Customer", "D̃ᵀ (label)"].map(t => ({ text: t, options: { fill: { color: GOLD }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
+    const tRows = [tHead, ...[["D", "0.65"], ["E", "−0.25"], ["F", "0.50"]].map((r, i) => r.map((v, j) => ({
+      text: v, options: { align: "center", valign: "middle", bold: j === 0, color: BODY, fill: { color: i % 2 === 0 ? WHITE : GOLD_BG } },
+    })))];
+    s.addTable(tRows, { x: mx2, y: tableY, w: miniW, h: tableH, colW: [miniW * 0.5, miniW * 0.5], fontFace: BODY_FONT, fontSize: 11, border: { type: "solid", color: "E4E7F0", pt: 1 }, autoPage: false, margin: [0.02, 0.05, 0.02, 0.05], rowH: tableH / 4 });
+  }
 
-  s.addShape("roundRect", { x: 0.6, y: top + ch + 0.2, w: 12.1, h: 0.85, rectRadius: 0.06, fill: { color: ICE_LT }, line: { type: "none" } });
+  // SCORE — both models score a brand-new customer G, never seen by either
+  const scoreTop = trainTop + trainH + 0.15, scoreH = 1.3;
+  s.addShape("roundRect", { x: 0.6, y: scoreTop, w: 12.1, h: scoreH, rectRadius: 0.1, fill: { color: GOLD_BG }, line: { color: GOLD, width: 1 } });
+  s.addText([
+    { text: "SCORE   ", options: { bold: true, color: GOLD } },
+    { text: "both models score a brand-new customer, G — never in A–F, so this is a genuine out-of-sample prediction", options: { color: MUTED, italic: true } },
+  ], { x: 0.85, y: scoreTop + 0.14, w: 11.6, h: 0.26, fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0 });
+  {
+    const innerW = 11.6, gap = 0.5, miniW = (innerW - gap) / 2;
+    const mx1 = 0.85, mx2 = mx1 + miniW + gap, labelY = scoreTop + 0.48, tableY = scoreTop + 0.72, tableH = scoreH - 0.88;
+    s.addText("τC(x) scores customer G", { x: mx1, y: labelY, w: miniW, h: 0.22, fontFace: BODY_FONT, fontSize: 10.5, bold: true, color: GREEN, isTextBox: true, margin: 0 });
+    const cHead = ["Customer", "τC(x)"].map(t => ({ text: t, options: { fill: { color: GREEN }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
+    const cRows = [cHead, ["G", "0.12"].map((v, j) => ({
+      text: v, options: { align: "center", valign: "middle", bold: j === 0, color: BODY, fill: { color: WHITE } },
+    }))];
+    s.addTable(cRows, { x: mx1, y: tableY, w: miniW, h: tableH, colW: [miniW * 0.5, miniW * 0.5], fontFace: BODY_FONT, fontSize: 11, border: { type: "solid", color: "F0DFB0", pt: 1 }, autoPage: false, margin: [0.02, 0.05, 0.02, 0.05], rowH: tableH / 2 });
+
+    s.addText("τT(x) scores customer G", { x: mx2, y: labelY, w: miniW, h: 0.22, fontFace: BODY_FONT, fontSize: 10.5, bold: true, color: GOLD, isTextBox: true, margin: 0 });
+    const tHead = ["Customer", "τT(x)"].map(t => ({ text: t, options: { fill: { color: GOLD }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
+    const tRows = [tHead, ["G", "0.28"].map((v, j) => ({
+      text: v, options: { align: "center", valign: "middle", bold: j === 0, color: BODY, fill: { color: WHITE } },
+    }))];
+    s.addTable(tRows, { x: mx2, y: tableY, w: miniW, h: tableH, colW: [miniW * 0.5, miniW * 0.5], fontFace: BODY_FONT, fontSize: 11, border: { type: "solid", color: "F0DFB0", pt: 1 }, autoPage: false, margin: [0.02, 0.05, 0.02, 0.05], rowH: tableH / 2 });
+  }
+
+  s.addShape("roundRect", { x: 0.6, y: scoreTop + scoreH + 0.15, w: 12.1, h: 0.85, rectRadius: 0.06, fill: { color: ICE_LT }, line: { type: "none" } });
   s.addText([
     { text: "What they output: ", options: { bold: true, color: NAVY } },
     { text: "“how big is this customer's incremental effect” — not “how likely are they to respond.” ", options: { color: NAVY } },
     { text: "Why two of them: ", options: { bold: true, color: NAVY } },
-    { text: "each is trained on a different pseudo-effect sample — τC on the large control-side sample, τT on the small treatment-side one — so neither is fully trustworthy alone. Layer 4 decides how much to lean on each.", options: { color: NAVY } },
-  ], { x: 0.85, y: top + ch + 0.2, w: 11.6, h: 0.85, valign: "middle", fontFace: BODY_FONT, fontSize: 11.5, isTextBox: true, margin: 0, lineSpacingMultiple: 1.22 });
+    { text: "τC(G) = 0.12 and τT(G) = 0.28 are two different estimates of the same customer's uplift, each trained on a different, differently-sized sample — so neither is fully trustworthy alone. Layer 4 decides how much to lean on each.", options: { color: NAVY } },
+  ], { x: 0.85, y: scoreTop + scoreH + 0.15, w: 11.6, h: 0.85, valign: "middle", fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2 });
 
-  const wy = top + ch + 1.2;
-  s.addText("Worked example — a new customer, G, scored by both:", { x: 0.6, y: wy, w: 12.1, h: 0.35, fontFace: BODY_FONT, fontSize: 13, bold: true, color: NAVY, isTextBox: true, margin: 0 });
-
-  const bw = 2.7, bh = 1.1, bgap = 0.6, bx = (PW - bw * 2 - bgap) / 2, by = wy + 0.42;
-  s.addShape("roundRect", { x: bx, y: by, w: bw, h: bh, rectRadius: 0.08, fill: { color: GREEN }, line: { type: "none" } });
-  s.addText("τC(G)", { x: bx, y: by + 0.12, w: bw, h: 0.32, align: "center", fontFace: BODY_FONT, fontSize: 12.5, color: WHITE, isTextBox: true, margin: 0 });
-  s.addText("0.12", { x: bx, y: by + 0.42, w: bw, h: 0.6, align: "center", fontFace: HEAD_FONT, fontSize: 27, bold: true, color: WHITE, isTextBox: true, margin: 0 });
-
-  s.addShape("roundRect", { x: bx + bw + bgap, y: by, w: bw, h: bh, rectRadius: 0.08, fill: { color: GOLD }, line: { type: "none" } });
-  s.addText("τT(G)", { x: bx + bw + bgap, y: by + 0.12, w: bw, h: 0.32, align: "center", fontFace: BODY_FONT, fontSize: 12.5, color: WHITE, isTextBox: true, margin: 0 });
-  s.addText("0.28", { x: bx + bw + bgap, y: by + 0.42, w: bw, h: 0.6, align: "center", fontFace: HEAD_FONT, fontSize: 27, bold: true, color: WHITE, isTextBox: true, margin: 0 });
-
-  s.addText("Two different estimates of the same customer's uplift — neither is the final answer yet.", {
-    x: 0.6, y: by + bh + 0.12, w: 12.1, h: 0.35, align: "center", italic: true, fontFace: BODY_FONT, fontSize: 11.5, color: MUTED, isTextBox: true, margin: 0,
-  });
   pageNum(s, 13);
 }
 
