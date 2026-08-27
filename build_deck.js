@@ -549,19 +549,48 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     { text: "learns μ̂₀(x) = E[Y(0) | X=x] — trained only on customers who stayed on the existing offer (control).\n", options: { color: BODY } },
     { text: "Treatment outcome model  ", options: { bold: true, color: NAVY } },
     { text: "learns μ̂₁(x) = E[Y(1) | X=x] — trained only on customers who got the new offer (treatment). (Y = 1 if they applied for the card, 0 if not.)", options: { color: BODY } },
-  ], { x: 0.6, y: 1.55, w: 12.1, h: 0.85, fontFace: BODY_FONT, fontSize: 13, isTextBox: true, margin: 0, lineSpacingMultiple: 1.28 });
+  ], { x: 0.6, y: 1.4, w: 12.1, h: 0.62, fontFace: BODY_FONT, fontSize: 11.5, isTextBox: true, margin: 0, lineSpacingMultiple: 1.22 });
 
-  s.addShape("roundRect", { x: 0.6, y: 2.45, w: 12.1, h: 0.55, rectRadius: 0.06, fill: { color: ICE_LT }, line: { type: "none" } });
-  s.addText("Both models are trained with out-of-fold / cross-fitted predictions — never a model scoring its own training rows. That avoids leakage and an overly optimistic effect estimate later.", {
-    x: 0.85, y: 2.45, w: 11.6, h: 0.55, valign: "middle", fontFace: BODY_FONT, fontSize: 11.5, italic: true, color: NAVY, isTextBox: true, margin: 0,
+  s.addShape("roundRect", { x: 0.6, y: 2.06, w: 12.1, h: 0.4, rectRadius: 0.06, fill: { color: "F2F2F5" }, line: { type: "none" } });
+  s.addText("Both models are trained with out-of-fold / cross-fitted predictions — never a model scoring its own training rows. That avoids leakage later.", {
+    x: 0.85, y: 2.06, w: 11.6, h: 0.4, valign: "middle", fontFace: BODY_FONT, fontSize: 10.5, italic: true, color: NAVY, isTextBox: true, margin: 0,
   });
 
-  s.addText("Once trained, both models score EVERY customer — including their own counterfactual arm:", {
-    x: 0.6, y: 3.2, w: 12.1, h: 0.35, fontFace: BODY_FONT, fontSize: 12.5, bold: true, color: NAVY, isTextBox: true, margin: 0,
-  });
+  // TRAIN — each outcome model fit ONLY on its own arm
+  const trainTop = 2.56, trainH = 1.7;
+  s.addShape("roundRect", { x: 0.6, y: trainTop, w: 12.1, h: trainH, rectRadius: 0.1, fill: { color: ICE_LT }, line: { color: NAVY, width: 1 } });
+  s.addText([
+    { text: "TRAIN   ", options: { bold: true, color: NAVY } },
+    { text: "each outcome model fit ONLY on its own arm", options: { color: MUTED, italic: true } },
+  ], { x: 0.85, y: trainTop + 0.14, w: 11.6, h: 0.26, fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0 });
+  {
+    const innerW = 11.6, gap = 0.5, miniW = (innerW - gap) / 2;
+    const mx1 = 0.85, mx2 = mx1 + miniW + gap, labelY = trainTop + 0.48, tableY = trainTop + 0.72, tableH = trainH - 0.88;
+    s.addText("Control (A,B,C) → μ̂₀ model", { x: mx1, y: labelY, w: miniW, h: 0.22, fontFace: BODY_FONT, fontSize: 10.5, bold: true, color: NAVY, isTextBox: true, margin: 0 });
+    const ctrlHead = ["Customer", "Applied"].map(t => ({ text: t, options: { fill: { color: NAVY }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
+    const ctrlRows = [ctrlHead, ...[["A", "0"], ["B", "1"], ["C", "0"]].map((r, i) => r.map((v, j) => ({
+      text: v, options: { align: "center", valign: "middle", bold: j === 0, color: BODY, fill: { color: i % 2 === 0 ? WHITE : "F4F6FB" } },
+    })))];
+    s.addTable(ctrlRows, { x: mx1, y: tableY, w: miniW, h: tableH, colW: [miniW * 0.5, miniW * 0.5], fontFace: BODY_FONT, fontSize: 11, border: { type: "solid", color: "E4E7F0", pt: 1 }, autoPage: false, margin: [0.02, 0.05, 0.02, 0.05], rowH: tableH / 4 });
+
+    s.addText("Treatment (D,E,F) → μ̂₁ model", { x: mx2, y: labelY, w: miniW, h: 0.22, fontFace: BODY_FONT, fontSize: 10.5, bold: true, color: GOLD, isTextBox: true, margin: 0 });
+    const trtHead = ["Customer", "Applied"].map(t => ({ text: t, options: { fill: { color: GOLD }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
+    const trtRows = [trtHead, ...[["D", "1"], ["E", "0"], ["F", "1"]].map((r, i) => r.map((v, j) => ({
+      text: v, options: { align: "center", valign: "middle", bold: j === 0, color: BODY, fill: { color: i % 2 === 0 ? WHITE : "F4F6FB" } },
+    })))];
+    s.addTable(trtRows, { x: mx2, y: tableY, w: miniW, h: tableH, colW: [miniW * 0.5, miniW * 0.5], fontFace: BODY_FONT, fontSize: 11, border: { type: "solid", color: "E4E7F0", pt: 1 }, autoPage: false, margin: [0.02, 0.05, 0.02, 0.05], rowH: tableH / 4 });
+  }
+
+  // SCORE — once trained, BOTH models score EVERY customer
+  const scoreTop = trainTop + trainH + 0.15, scoreH = 2.5;
+  s.addShape("roundRect", { x: 0.6, y: scoreTop, w: 12.1, h: scoreH, rectRadius: 0.1, fill: { color: GOLD_BG }, line: { color: GOLD, width: 1 } });
+  s.addText([
+    { text: "SCORE   ", options: { bold: true, color: GOLD } },
+    { text: "once trained, BOTH models score EVERY customer — including their own counterfactual arm", options: { color: MUTED, italic: true } },
+  ], { x: 0.85, y: scoreTop + 0.14, w: 11.6, h: 0.26, fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0 });
 
   const header_row = ["Customer", "new_offer", "Applied", "μ̂₀(x)\npred. Applied, old offer", "μ̂₁(x)\npred. Applied, new offer"].map(t => (
-    { text: t, options: { fill: { color: NAVY }, color: WHITE, bold: true, align: "center", valign: "middle" } }
+    { text: t, options: { fill: { color: NAVY }, color: WHITE, bold: true, align: "center", valign: "middle", fontSize: 9.5 } }
   ));
   const data = [
     ["A", "0 (old offer)", "0", "0.20", "0.55"],
@@ -577,14 +606,14 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
       align: j === 0 ? "left" : "center", valign: "middle",
       bold: j === 0,
       color: j === 1 ? (v.startsWith("0") ? NAVY : GOLD) : BODY,
-      fill: { color: i % 2 === 0 ? WHITE : ICE_LT },
+      fill: { color: i % 2 === 0 ? WHITE : GOLD_BG },
     },
   })))];
   s.addTable(rows, {
-    x: 1.4, y: 3.65, w: 10.55, h: 3.3,
-    colW: [1.6, 2.05, 1.6, 2.65, 2.65],
-    fontFace: BODY_FONT, fontSize: 12.5, border: { type: "solid", color: "E4E7F0", pt: 1 },
-    autoPage: false, margin: [0.05, 0.1, 0.05, 0.1], rowH: 0.47,
+    x: 1.0, y: scoreTop + 0.48, w: 11.3, h: scoreH - 0.63,
+    colW: [1.5, 1.95, 1.5, 3.15, 3.2],
+    fontFace: BODY_FONT, fontSize: 11, border: { type: "solid", color: "F0DFB0", pt: 1 },
+    autoPage: false, margin: [0.04, 0.08, 0.04, 0.08], rowH: (scoreH - 0.63) / 7,
   });
   pageNum(s, 10);
 }
