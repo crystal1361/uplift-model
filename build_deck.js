@@ -309,20 +309,20 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     { text: "TRAIN   ", options: { bold: true, color: NAVY } },
     { text: "two separate models, TWO fit() calls", options: { color: MUTED, italic: true } },
   ], { x: x1 + 0.25, y: top + 0.14, w: cw - 0.5, h: 0.28, fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0 });
-  s.addText("Y: 1 = applied for the card, 0 = didn't  ·  which model a customer trains depends on whether they got the offer", {
+  s.addText("Control = A, B, C — did NOT get the offer/coupon.  Treatment = D, E, F — DID get the offer/coupon. Y: 1 = applied, 0 = didn't.", {
     x: x1 + 0.25, y: legendY6, w: cw - 0.5, h: 0.22, fontFace: BODY_FONT, fontSize: 9, italic: true, color: MUTED, isTextBox: true, margin: 0,
   });
   {
     const innerW = cw - 0.5, gap = 0.2, miniW = (innerW - gap) / 2;
     const mx1 = x1 + 0.25, mx2 = mx1 + miniW + gap, labelY = top + 0.7, tableY = top + 0.94, tableH = ch - 1.09;
-    s.addText("Control model (no offer)  →  μ̂₀", { x: mx1, y: labelY, w: miniW, h: 0.24, fontFace: BODY_FONT, fontSize: 10, bold: true, color: NAVY, isTextBox: true, margin: 0 });
+    s.addText("Control (A,B,C)  →  μ̂₀", { x: mx1, y: labelY, w: miniW, h: 0.24, fontFace: BODY_FONT, fontSize: 10, bold: true, color: NAVY, isTextBox: true, margin: 0 });
     const ctrlHead = ["Customer", "Y"].map(t => ({ text: t, options: { fill: { color: NAVY }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
     const ctrlRows = [ctrlHead, ...[["A", "0"], ["B", "1"], ["C", "0"]].map((r, i) => r.map((v, j) => ({
       text: v, options: { align: "center", valign: "middle", bold: j === 0, color: BODY, fill: { color: i % 2 === 0 ? WHITE : "F4F6FB" } },
     })))];
     s.addTable(ctrlRows, { x: mx1, y: tableY, w: miniW, h: tableH, colW: [miniW * 0.55, miniW * 0.45], fontFace: BODY_FONT, fontSize: 10.5, border: { type: "solid", color: "E4E7F0", pt: 1 }, autoPage: false, margin: [0.02, 0.04, 0.02, 0.04], rowH: tableH / 4 });
 
-    s.addText("Treatment model (got offer)  →  μ̂₁", { x: mx2, y: labelY, w: miniW, h: 0.24, fontFace: BODY_FONT, fontSize: 10, bold: true, color: GOLD, isTextBox: true, margin: 0 });
+    s.addText("Treatment (D,E,F)  →  μ̂₁", { x: mx2, y: labelY, w: miniW, h: 0.24, fontFace: BODY_FONT, fontSize: 10, bold: true, color: GOLD, isTextBox: true, margin: 0 });
     const trtHead = ["Customer", "Y"].map(t => ({ text: t, options: { fill: { color: GOLD }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
     const trtRows = [trtHead, ...[["D", "1"], ["E", "0"], ["F", "1"]].map((r, i) => r.map((v, j) => ({
       text: v, options: { align: "center", valign: "middle", bold: j === 0, color: BODY, fill: { color: i % 2 === 0 ? WHITE : "F4F6FB" } },
