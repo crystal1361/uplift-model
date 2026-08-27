@@ -144,18 +144,23 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     x: 0.6, y: 3.35, w: 5.7, h: 0.6, fontFace: "Courier New", fontSize: 14, bold: true, color: NAVY,
     isTextBox: true, margin: 0,
   });
+  s.addShape("roundRect", { x: 0.6, y: 4.0, w: 5.7, h: 0.85, rectRadius: 0.06, fill: { color: ICE_LT }, line: { type: "none" } });
+  s.addText([
+    { text: "In our prescreen example:  ", options: { bold: true, color: NAVY } },
+    { text: "Y = 1 if the customer applies for the credit card, 0 if not.  T = 1 if they received the prescreen mail offer (treatment), 0 if they were held out (control).", options: { color: BODY } },
+  ], { x: 0.85, y: 4.0, w: 5.35, h: 0.85, valign: "middle", fontFace: BODY_FONT, fontSize: 11.5, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2 });
   s.addText("the treatment effect — not the response probability — is the thing we're trying to score.", {
-    x: 0.6, y: 3.95, w: 5.7, h: 0.6, fontFace: BODY_FONT, fontSize: 11.5, italic: true, color: MUTED, isTextBox: true, margin: 0,
+    x: 0.6, y: 4.95, w: 5.7, h: 0.45, fontFace: BODY_FONT, fontSize: 11, italic: true, color: MUTED, isTextBox: true, margin: 0,
   });
 
   // 2x2 quadrant grid
   const gx = 6.7, gy = 1.5, gw = 5.9, gh = 5.35;
   const cw = gw / 2, ch = gh / 2, pad = 0.12;
   const quads = [
-    { t: "Persuadables", d: "Respond only if treated — the offer changes their decision. This is the target segment.", fill: GREEN_BG, tc: GREEN },
-    { t: "Sure Things", d: "Respond either way. Treating them is wasted budget.", fill: ICE_LT, tc: NAVY },
-    { t: "Lost Causes", d: "Never respond, treated or not. Nothing to gain.", fill: "F2F2F5", tc: MUTED },
-    { t: "Sleeping Dogs", d: "Respond less if treated — the offer backfires.", fill: RED_BG, tc: RED },
+    { t: "Persuadables", d: "Apply only if they get the offer (Y=1 under T=1, Y=0 under T=0) — the offer changes their decision. This is the target segment.", fill: GREEN_BG, tc: GREEN },
+    { t: "Sure Things", d: "Apply either way (Y=1 regardless of T). Mailing them is wasted budget.", fill: ICE_LT, tc: NAVY },
+    { t: "Lost Causes", d: "Never apply, offer or not (Y=0 regardless of T). Nothing to gain.", fill: "F2F2F5", tc: MUTED },
+    { t: "Sleeping Dogs", d: "Apply LESS often if they get the offer — the mailing backfires.", fill: RED_BG, tc: RED },
   ];
   quads.forEach((q, i) => {
     const cx = gx + (i % 2) * (cw + pad);
@@ -174,9 +179,9 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   const s = newSlide(WHITE);
   header(s, "Estimation Strategies", "Three Ways to Estimate an Uplift Score");
   const cards = [
-    { t: "S-Learner", sub: "Single model", d: "One model, treatment as just another input feature. τ(x) = f(x,1) − f(x,0).", fill: ICE_LT, badge: null },
-    { t: "T-Learner", sub: "Two models", d: "Two fully separate models, one per arm. τ(x) = μ₁(x) − μ₀(x).", fill: ICE_LT, badge: null },
-    { t: "X-Learner", sub: "Cross-learning", d: "Two outcome models feed two effect models, combined by a weight g(x).", fill: GOLD_BG, badge: "Used here" },
+    { t: "S-Learner", sub: "Single model", d: "One model, is_treated (got the offer, 1/0) as just another input feature. τ(x) = f(x,1) − f(x,0), where 1/0 flips whether the offer was sent.", fill: ICE_LT, badge: null },
+    { t: "T-Learner", sub: "Two models", d: "Two fully separate models, one per arm. τ(x) = μ₁(x) − μ₀(x), where μ₁ is the offer-group model and μ₀ is the no-offer (control) model.", fill: ICE_LT, badge: null },
+    { t: "X-Learner", sub: "Cross-learning", d: "Two outcome models feed two effect models, combined by a weight g(x). Same Y (applied?) and is_treated (got the offer?) as above.", fill: GOLD_BG, badge: "Used here" },
   ];
   const cw = 3.85, gap = 0.3, top = 1.85, ch = 4.9;
   const startX = (PW - (cw * 3 + gap * 2)) / 2;
@@ -202,16 +207,20 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   const s = newSlide(WHITE);
   header(s, "Estimator 1 of 3", "S-Learner, In Our Prescreen Example");
 
-  const cw = 5.85, x1 = 0.6, x2 = 6.85, top = 1.5, ch = 2.15;
+  const cw = 5.85, x1 = 0.6, x2 = 6.85, top = 1.5, ch = 2.3;
+  const legendY = top + 0.44;
 
   // TRAIN — one pooled dataset, one fit() call
   s.addShape("roundRect", { x: x1, y: top, w: cw, h: ch, rectRadius: 0.1, fill: { color: ICE_LT }, line: { color: NAVY, width: 1 } });
   s.addText([
     { text: "TRAIN   ", options: { bold: true, color: NAVY } },
     { text: "pooled — ONE model, ONE fit() call", options: { color: MUTED, italic: true } },
-  ], { x: x1 + 0.25, y: top + 0.15, w: cw - 0.5, h: 0.3, fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0 });
+  ], { x: x1 + 0.25, y: top + 0.14, w: cw - 0.5, h: 0.28, fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0 });
+  s.addText("is_treated: 1 = got the prescreen offer, 0 = control  ·  Y: 1 = applied for the card, 0 = didn't", {
+    x: x1 + 0.25, y: legendY, w: cw - 0.5, h: 0.22, fontFace: BODY_FONT, fontSize: 9, italic: true, color: MUTED, isTextBox: true, margin: 0,
+  });
   {
-    const tw = cw - 0.5, ty = top + 0.5, th = ch - 0.65;
+    const tw = cw - 0.5, ty = top + 0.68, th = ch - 0.83;
     const head = ["Customer", "is_treated", "Y"].map(t => ({ text: t, options: { fill: { color: NAVY }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
     const data = [["A", "0", "0"], ["B", "0", "1"], ["C", "0", "0"], ["D", "1", "1"], ["E", "1", "0"], ["F", "1", "1"]];
     const rows = [head, ...data.map((r, i) => r.map((v, j) => ({
@@ -229,21 +238,24 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   s.addShape("roundRect", { x: x2, y: top, w: cw, h: ch, rectRadius: 0.1, fill: { color: GOLD_BG }, line: { color: GOLD, width: 1 } });
   s.addText([
     { text: "SCORE   ", options: { bold: true, color: GOLD } },
-    { text: "same model — TWO predict() calls per customer", options: { color: MUTED, italic: true } },
-  ], { x: x2 + 0.25, y: top + 0.15, w: cw - 0.5, h: 0.3, fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0 });
+    { text: "one model, run for BOTH mailing scenarios on customer G", options: { color: MUTED, italic: true } },
+  ], { x: x2 + 0.25, y: top + 0.14, w: cw - 0.5, h: 0.28, fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0 });
+  s.addText("Same customer G, same model — we just flip is_treated and ask “what if?” twice", {
+    x: x2 + 0.25, y: legendY, w: cw - 0.5, h: 0.22, fontFace: BODY_FONT, fontSize: 9, italic: true, color: MUTED, isTextBox: true, margin: 0,
+  });
   {
-    const tw = cw - 0.5, ty = top + 0.5, th = ch - 0.65;
-    const head = ["Predict call", "is_treated in", "f(G, ·)"].map(t => ({ text: t, options: { fill: { color: GOLD }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
+    const tw = cw - 0.5, ty = top + 0.68, th = ch - 0.83;
+    const head = ["Mailing scenario", "is_treated", "P(applied)"].map(t => ({ text: t, options: { fill: { color: GOLD }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
     const rows = [
       head,
       [
-        { text: "Call 1", options: { align: "center", valign: "middle", bold: true, color: NAVY, fill: { color: WHITE } } },
-        { text: "1  (treated)", options: { align: "center", valign: "middle", color: GOLD, fill: { color: WHITE } } },
+        { text: "G gets the offer", options: { align: "center", valign: "middle", bold: true, color: NAVY, fill: { color: WHITE } } },
+        { text: "1", options: { align: "center", valign: "middle", color: GOLD, fill: { color: WHITE } } },
         { text: "0.42", options: { align: "center", valign: "middle", color: BODY, fill: { color: WHITE } } },
       ],
       [
-        { text: "Call 2", options: { align: "center", valign: "middle", bold: true, color: NAVY, fill: { color: "FBF3E1" } } },
-        { text: "0  (control)", options: { align: "center", valign: "middle", color: NAVY, fill: { color: "FBF3E1" } } },
+        { text: "G doesn't get it", options: { align: "center", valign: "middle", bold: true, color: NAVY, fill: { color: "FBF3E1" } } },
+        { text: "0", options: { align: "center", valign: "middle", color: NAVY, fill: { color: "FBF3E1" } } },
         { text: "0.31", options: { align: "center", valign: "middle", color: BODY, fill: { color: "FBF3E1" } } },
       ],
       [
@@ -288,25 +300,29 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   const s = newSlide(WHITE);
   header(s, "Estimator 2 of 3", "T-Learner, In Our Prescreen Example");
 
-  const cw = 5.85, x1 = 0.6, x2 = 6.85, top = 1.5, ch = 2.15;
+  const cw = 5.85, x1 = 0.6, x2 = 6.85, top = 1.5, ch = 2.3;
+  const legendY6 = top + 0.44;
 
   // TRAIN — two disjoint datasets, two fit() calls
   s.addShape("roundRect", { x: x1, y: top, w: cw, h: ch, rectRadius: 0.1, fill: { color: ICE_LT }, line: { color: NAVY, width: 1 } });
   s.addText([
     { text: "TRAIN   ", options: { bold: true, color: NAVY } },
     { text: "two separate models, TWO fit() calls", options: { color: MUTED, italic: true } },
-  ], { x: x1 + 0.25, y: top + 0.15, w: cw - 0.5, h: 0.3, fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0 });
+  ], { x: x1 + 0.25, y: top + 0.14, w: cw - 0.5, h: 0.28, fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0 });
+  s.addText("Y: 1 = applied for the card, 0 = didn't  ·  which model a customer trains depends on whether they got the offer", {
+    x: x1 + 0.25, y: legendY6, w: cw - 0.5, h: 0.22, fontFace: BODY_FONT, fontSize: 9, italic: true, color: MUTED, isTextBox: true, margin: 0,
+  });
   {
     const innerW = cw - 0.5, gap = 0.2, miniW = (innerW - gap) / 2;
-    const mx1 = x1 + 0.25, mx2 = mx1 + miniW + gap, labelY = top + 0.5, tableY = top + 0.76, tableH = ch - 0.91;
-    s.addText("Control model  →  μ̂₀", { x: mx1, y: labelY, w: miniW, h: 0.24, fontFace: BODY_FONT, fontSize: 10.5, bold: true, color: NAVY, isTextBox: true, margin: 0 });
+    const mx1 = x1 + 0.25, mx2 = mx1 + miniW + gap, labelY = top + 0.7, tableY = top + 0.94, tableH = ch - 1.09;
+    s.addText("Control model (no offer)  →  μ̂₀", { x: mx1, y: labelY, w: miniW, h: 0.24, fontFace: BODY_FONT, fontSize: 10, bold: true, color: NAVY, isTextBox: true, margin: 0 });
     const ctrlHead = ["Customer", "Y"].map(t => ({ text: t, options: { fill: { color: NAVY }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
     const ctrlRows = [ctrlHead, ...[["A", "0"], ["B", "1"], ["C", "0"]].map((r, i) => r.map((v, j) => ({
       text: v, options: { align: "center", valign: "middle", bold: j === 0, color: BODY, fill: { color: i % 2 === 0 ? WHITE : "F4F6FB" } },
     })))];
     s.addTable(ctrlRows, { x: mx1, y: tableY, w: miniW, h: tableH, colW: [miniW * 0.55, miniW * 0.45], fontFace: BODY_FONT, fontSize: 10.5, border: { type: "solid", color: "E4E7F0", pt: 1 }, autoPage: false, margin: [0.02, 0.04, 0.02, 0.04], rowH: tableH / 4 });
 
-    s.addText("Treatment model  →  μ̂₁", { x: mx2, y: labelY, w: miniW, h: 0.24, fontFace: BODY_FONT, fontSize: 10.5, bold: true, color: GOLD, isTextBox: true, margin: 0 });
+    s.addText("Treatment model (got offer)  →  μ̂₁", { x: mx2, y: labelY, w: miniW, h: 0.24, fontFace: BODY_FONT, fontSize: 10, bold: true, color: GOLD, isTextBox: true, margin: 0 });
     const trtHead = ["Customer", "Y"].map(t => ({ text: t, options: { fill: { color: GOLD }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
     const trtRows = [trtHead, ...[["D", "1"], ["E", "0"], ["F", "1"]].map((r, i) => r.map((v, j) => ({
       text: v, options: { align: "center", valign: "middle", bold: j === 0, color: BODY, fill: { color: i % 2 === 0 ? WHITE : "F4F6FB" } },
@@ -318,21 +334,24 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   s.addShape("roundRect", { x: x2, y: top, w: cw, h: ch, rectRadius: 0.1, fill: { color: GOLD_BG }, line: { color: GOLD, width: 1 } });
   s.addText([
     { text: "SCORE   ", options: { bold: true, color: GOLD } },
-    { text: "both models — ONE predict() call each", options: { color: MUTED, italic: true } },
-  ], { x: x2 + 0.25, y: top + 0.15, w: cw - 0.5, h: 0.3, fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0 });
+    { text: "each model scores customer G under ITS OWN scenario", options: { color: MUTED, italic: true } },
+  ], { x: x2 + 0.25, y: top + 0.14, w: cw - 0.5, h: 0.28, fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0 });
+  s.addText("No flag to flip — which model you ask IS the mailing scenario", {
+    x: x2 + 0.25, y: legendY6, w: cw - 0.5, h: 0.22, fontFace: BODY_FONT, fontSize: 9, italic: true, color: MUTED, isTextBox: true, margin: 0,
+  });
   {
-    const tw = cw - 0.5, ty = top + 0.5, th = ch - 0.65;
-    const head = ["Model", "Call", "Output"].map(t => ({ text: t, options: { fill: { color: GOLD }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
+    const tw = cw - 0.5, ty = top + 0.68, th = ch - 0.83;
+    const head = ["Model", "Mailing scenario", "P(applied)"].map(t => ({ text: t, options: { fill: { color: GOLD }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
     const rows = [
       head,
       [
         { text: "μ̂₀ — control model", options: { align: "left", valign: "middle", bold: true, color: NAVY, fill: { color: WHITE } } },
-        { text: "predict(G)", options: { align: "center", valign: "middle", color: BODY, fill: { color: WHITE } } },
+        { text: "G doesn't get it", options: { align: "center", valign: "middle", color: BODY, fill: { color: WHITE } } },
         { text: "0.19", options: { align: "center", valign: "middle", color: BODY, fill: { color: WHITE } } },
       ],
       [
         { text: "μ̂₁ — treatment model", options: { align: "left", valign: "middle", bold: true, color: GOLD, fill: { color: "FBF3E1" } } },
-        { text: "predict(G)", options: { align: "center", valign: "middle", color: BODY, fill: { color: "FBF3E1" } } },
+        { text: "G gets the offer", options: { align: "center", valign: "middle", color: BODY, fill: { color: "FBF3E1" } } },
         { text: "0.35", options: { align: "center", valign: "middle", color: BODY, fill: { color: "FBF3E1" } } },
       ],
       [
@@ -464,10 +483,10 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   header(s, "Layer 1 of 4", "Two Outcome Models");
   s.addText([
     { text: "Control outcome model  ", options: { bold: true, color: NAVY } },
-    { text: "learns μ̂₀(x) = E[Y(0) | X=x] — trained only on control-group rows.\n", options: { color: BODY } },
+    { text: "learns μ̂₀(x) = E[Y(0) | X=x] — trained only on customers who did NOT get the offer.\n", options: { color: BODY } },
     { text: "Treatment outcome model  ", options: { bold: true, color: NAVY } },
-    { text: "learns μ̂₁(x) = E[Y(1) | X=x] — trained only on treatment-group rows.", options: { color: BODY } },
-  ], { x: 0.6, y: 1.55, w: 12.1, h: 0.85, fontFace: BODY_FONT, fontSize: 13.5, isTextBox: true, margin: 0, lineSpacingMultiple: 1.3 });
+    { text: "learns μ̂₁(x) = E[Y(1) | X=x] — trained only on customers who DID get the offer. (Y = 1 if they applied for the card, 0 if not.)", options: { color: BODY } },
+  ], { x: 0.6, y: 1.55, w: 12.1, h: 0.85, fontFace: BODY_FONT, fontSize: 13, isTextBox: true, margin: 0, lineSpacingMultiple: 1.28 });
 
   s.addShape("roundRect", { x: 0.6, y: 2.45, w: 12.1, h: 0.55, rectRadius: 0.06, fill: { color: ICE_LT }, line: { type: "none" } });
   s.addText("Both models are trained with out-of-fold / cross-fitted predictions — never a model scoring its own training rows. That avoids leakage and an overly optimistic effect estimate later.", {
@@ -513,7 +532,7 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
 {
   const s = newSlide(WHITE);
   header(s, "Layer 2 of 4", "Constructing Two Pseudo Effects");
-  s.addText("X-Learner doesn't use μ̂₁ − μ̂₀ directly. It first imputes what each observed unit's effect probably was, using the OTHER arm's model as its counterfactual:", {
+  s.addText("X-Learner doesn't use μ̂₁ − μ̂₀ directly — it first imputes each unit's likely effect using the OTHER arm's model as counterfactual. (Y = 1 if the customer applied for the card, 0 if not.)", {
     x: 0.6, y: 1.55, w: 12.1, h: 0.55, fontFace: BODY_FONT, fontSize: 13, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
   });
 
