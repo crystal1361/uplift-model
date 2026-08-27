@@ -403,12 +403,14 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     x: x2 + 0.3, y: pc_top + 0.5, w: cw - 0.6, h: pc_h - 0.65, fontFace: BODY_FONT, fontSize: 11.5, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
   });
 
-  const why_top = pc_top + pc_h + 0.15, why_h = 1.15;
+  const why_top = pc_top + pc_h + 0.15, why_h = 1.3;
   s.addShape("roundRect", { x: 0.6, y: why_top, w: 12.1, h: why_h, rectRadius: 0.08, fill: { color: NAVY_DK }, line: { type: "none" } });
   s.addText([
     { text: "Why not chosen:  ", options: { bold: true, color: GOLD } },
-    { text: "control is deliberately a small holdout — you can't withhold the offer from too many good prospects. That starves the control model exactly where T-Learner needs it most; its noise lands straight in every uplift score. Closing that gap is the reason X-Learner exists.", options: { color: WHITE } },
-  ], { x: 0.95, y: why_top, w: 11.4, h: why_h, valign: "middle", fontFace: BODY_FONT, fontSize: 12.5, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2 });
+    { text: "T-Learner isn't broken by design — if control and treatment were roughly balanced (50/50), both models would have plenty of data and this would likely work fine. ", options: { color: WHITE } },
+    { text: "The problem is our specific setup: ", options: { bold: true, color: "C9D2F0" } },
+    { text: "control is deliberately a small holdout — you can't withhold the offer from too many good prospects. That imbalance starves the control model exactly where T-Learner needs it most, and its noise lands straight in every uplift score. Closing that imbalance gap is the reason X-Learner exists.", options: { color: WHITE } },
+  ], { x: 0.95, y: why_top, w: 11.4, h: why_h, valign: "middle", fontFace: BODY_FONT, fontSize: 12, isTextBox: true, margin: 0, lineSpacingMultiple: 1.22 });
 
   pageNum(s, 6);
 }
