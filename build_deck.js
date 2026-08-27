@@ -581,22 +581,19 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     s.addTable(trtRows, { x: mx2, y: tableY, w: miniW, h: tableH, colW: [miniW * 0.5, miniW * 0.5], fontFace: BODY_FONT, fontSize: 11, border: { type: "solid", color: "E4E7F0", pt: 1 }, autoPage: false, margin: [0.02, 0.05, 0.02, 0.05], rowH: tableH / 4 });
   }
 
-  // SCORE — once trained, BOTH models score EVERY customer — two separate scoring passes
-  const scoreTop = trainTop + trainH + 0.15, scoreH = 2.42;
+  // SCORE — each model only ever scores the OTHER arm (its own arm's real outcome is already known)
+  const scoreTop = trainTop + trainH + 0.15, scoreH = 1.7;
   s.addShape("roundRect", { x: 0.6, y: scoreTop, w: 12.1, h: scoreH, rectRadius: 0.1, fill: { color: GOLD_BG }, line: { color: GOLD, width: 1 } });
   s.addText([
     { text: "SCORE   ", options: { bold: true, color: GOLD } },
-    { text: "once trained, BOTH models score EVERY customer — including their own counterfactual arm — as two separate passes", options: { color: MUTED, italic: true } },
+    { text: "each model only scores the OTHER arm — its own arm's real outcome is already observed, no prediction needed", options: { color: MUTED, italic: true } },
   ], { x: 0.85, y: scoreTop + 0.14, w: 11.6, h: 0.26, fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0 });
 
   {
     const innerW = 11.6, gap = 0.5, miniW = (innerW - gap) / 2;
     const mx1 = 0.85, mx2 = mx1 + miniW + gap, labelY = scoreTop + 0.48, tableY = scoreTop + 0.72, tableH = scoreH - 0.88;
     const colW = [0.75, 1.4, 0.75, 2.65];
-    const scoreData = [
-      ["A", "0 (old)", "0", "0.20"],
-      ["B", "0 (old)", "1", "0.60"],
-      ["C", "0 (old)", "0", "0.10"],
+    const scoreData0 = [
       ["D", "1 (new)", "1", "0.35"],
       ["E", "1 (new)", "0", "0.25"],
       ["F", "1 (new)", "1", "0.50"],
@@ -605,14 +602,11 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
       ["A", "0 (old)", "0", "0.55"],
       ["B", "0 (old)", "1", "0.75"],
       ["C", "0 (old)", "0", "0.30"],
-      ["D", "1 (new)", "1", "0.80"],
-      ["E", "1 (new)", "0", "0.40"],
-      ["F", "1 (new)", "1", "0.70"],
     ];
 
-    s.addText("μ̂₀ scores ALL customers → pred. Applied, old offer", { x: mx1, y: labelY, w: miniW, h: 0.22, fontFace: BODY_FONT, fontSize: 10.5, bold: true, color: NAVY, isTextBox: true, margin: 0 });
+    s.addText("μ̂₀ scores the TREATMENT arm (D,E,F) — counterfactual: old offer", { x: mx1, y: labelY, w: miniW, h: 0.22, fontFace: BODY_FONT, fontSize: 10.5, bold: true, color: NAVY, isTextBox: true, margin: 0 });
     const head0 = ["Cust.", "new_offer", "Applied", "μ̂₀(x)"].map(t => ({ text: t, options: { fill: { color: NAVY }, color: WHITE, bold: true, align: "center", valign: "middle", fontSize: 9.5 } }));
-    const rows0 = [head0, ...scoreData.map((r, i) => r.map((v, j) => ({
+    const rows0 = [head0, ...scoreData0.map((r, i) => r.map((v, j) => ({
       text: v,
       options: {
         align: "center", valign: "middle", bold: j === 0,
@@ -620,9 +614,9 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
         fill: { color: i % 2 === 0 ? WHITE : ICE_LT },
       },
     })))];
-    s.addTable(rows0, { x: mx1, y: tableY, w: miniW, h: tableH, colW, fontFace: BODY_FONT, fontSize: 10.5, border: { type: "solid", color: "E4E7F0", pt: 1 }, autoPage: false, margin: [0.02, 0.05, 0.02, 0.05], rowH: tableH / 7 });
+    s.addTable(rows0, { x: mx1, y: tableY, w: miniW, h: tableH, colW, fontFace: BODY_FONT, fontSize: 11, border: { type: "solid", color: "E4E7F0", pt: 1 }, autoPage: false, margin: [0.02, 0.05, 0.02, 0.05], rowH: tableH / 4 });
 
-    s.addText("μ̂₁ scores ALL customers → pred. Applied, new offer", { x: mx2, y: labelY, w: miniW, h: 0.22, fontFace: BODY_FONT, fontSize: 10.5, bold: true, color: GOLD, isTextBox: true, margin: 0 });
+    s.addText("μ̂₁ scores the CONTROL arm (A,B,C) — counterfactual: new offer", { x: mx2, y: labelY, w: miniW, h: 0.22, fontFace: BODY_FONT, fontSize: 10.5, bold: true, color: GOLD, isTextBox: true, margin: 0 });
     const head1 = ["Cust.", "new_offer", "Applied", "μ̂₁(x)"].map(t => ({ text: t, options: { fill: { color: GOLD }, color: WHITE, bold: true, align: "center", valign: "middle", fontSize: 9.5 } }));
     const rows1 = [head1, ...scoreData1.map((r, i) => r.map((v, j) => ({
       text: v,
@@ -632,8 +626,15 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
         fill: { color: i % 2 === 0 ? WHITE : GOLD_BG },
       },
     })))];
-    s.addTable(rows1, { x: mx2, y: tableY, w: miniW, h: tableH, colW, fontFace: BODY_FONT, fontSize: 10.5, border: { type: "solid", color: "F0DFB0", pt: 1 }, autoPage: false, margin: [0.02, 0.05, 0.02, 0.05], rowH: tableH / 7 });
+    s.addTable(rows1, { x: mx2, y: tableY, w: miniW, h: tableH, colW, fontFace: BODY_FONT, fontSize: 11, border: { type: "solid", color: "F0DFB0", pt: 1 }, autoPage: false, margin: [0.02, 0.05, 0.02, 0.05], rowH: tableH / 4 });
   }
+
+  s.addShape("roundRect", { x: 0.6, y: scoreTop + scoreH + 0.15, w: 12.1, h: 0.55, rectRadius: 0.06, fill: { color: NAVY_DK }, line: { type: "none" } });
+  s.addText([
+    { text: "Neither model ever scores its own training arm — ", options: { bold: true, color: GOLD } },
+    { text: "A, B, C already have a real Applied outcome (they never needed μ̂₀'s guess), and D, E, F already have theirs (they never needed μ̂₁'s guess). Only the counterfactual — the arm each model never saw — gets predicted.", options: { color: WHITE } },
+  ], { x: 0.85, y: scoreTop + scoreH + 0.15, w: 11.6, h: 0.55, valign: "middle", fontFace: BODY_FONT, fontSize: 10.5, isTextBox: true, margin: 0, lineSpacingMultiple: 1.1 });
+
   pageNum(s, 10);
 }
 
