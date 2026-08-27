@@ -240,34 +240,46 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     { text: "SCORE   ", options: { bold: true, color: GOLD } },
     { text: "one model, run for BOTH mailing scenarios on customer G", options: { color: MUTED, italic: true } },
   ], { x: x2 + 0.25, y: top + 0.14, w: cw - 0.5, h: 0.28, fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0 });
-  s.addText("Same customer G, same model — we just flip is_treated and ask “what if?” twice", {
+  s.addText("Two separate scoring calls — each with its own input table and output table", {
     x: x2 + 0.25, y: legendY, w: cw - 0.5, h: 0.22, fontFace: BODY_FONT, fontSize: 9, italic: true, color: MUTED, isTextBox: true, margin: 0,
   });
   {
-    const tw = cw - 0.5, ty = top + 0.68, th = ch - 0.83;
-    const head = ["Mailing scenario", "is_treated", "P(applied)"].map(t => ({ text: t, options: { fill: { color: GOLD }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
-    const rows = [
-      head,
-      [
-        { text: "G gets the offer", options: { align: "center", valign: "middle", bold: true, color: NAVY, fill: { color: WHITE } } },
-        { text: "1", options: { align: "center", valign: "middle", color: GOLD, fill: { color: WHITE } } },
-        { text: "0.42", options: { align: "center", valign: "middle", color: BODY, fill: { color: WHITE } } },
-      ],
-      [
-        { text: "G doesn't get it", options: { align: "center", valign: "middle", bold: true, color: NAVY, fill: { color: "FBF3E1" } } },
-        { text: "0", options: { align: "center", valign: "middle", color: NAVY, fill: { color: "FBF3E1" } } },
-        { text: "0.31", options: { align: "center", valign: "middle", color: BODY, fill: { color: "FBF3E1" } } },
-      ],
-      [
-        { text: "τ(G) = f(G,1) − f(G,0)", options: { colspan: 2, align: "left", valign: "middle", bold: true, color: WHITE, fill: { color: NAVY_DK } } },
-        { text: "0.11", options: { align: "center", valign: "middle", bold: true, color: GOLD, fill: { color: NAVY_DK }, fontSize: 15 } },
-      ],
-    ];
-    s.addTable(rows, {
-      x: x2 + 0.25, y: ty, w: tw, h: th, colW: [tw * 0.36, tw * 0.34, tw * 0.3],
-      fontFace: BODY_FONT, fontSize: 11.5, border: { type: "solid", color: "F0DFB0", pt: 1 },
-      autoPage: false, margin: [0.04, 0.06, 0.04, 0.06], rowH: th / 4,
-    });
+    const ty = top + 0.68;
+    const inputW = 2.5, arrowW = 0.4, outputW = 1.7;
+    const inX = x2 + 0.25, arrowX = inX + inputW, outX = arrowX + arrowW;
+    const pairH = 0.42, gapPair = 0.12, gapFinal = 0.1;
+    const row2Y = ty + pairH + gapPair;
+    const finalY = row2Y + pairH + gapFinal;
+    const finalH = (top + ch - 0.15) - finalY;
+
+    function scenarioPair(y, offerVal, offerColor, rowBg, output) {
+      const inHead = ["Customer", "receive_offer"].map(t => ({ text: t, options: { fill: { color: NAVY }, color: WHITE, bold: true, align: "center", valign: "middle", fontSize: 8.5 } }));
+      const inRow = [
+        { text: "G", options: { align: "center", valign: "middle", bold: true, color: NAVY, fill: { color: rowBg } } },
+        { text: String(offerVal), options: { align: "center", valign: "middle", bold: true, color: offerColor, fill: { color: rowBg } } },
+      ];
+      s.addTable([inHead, inRow], {
+        x: inX, y, w: inputW, h: pairH, colW: [inputW * 0.45, inputW * 0.55],
+        fontFace: BODY_FONT, fontSize: 11, border: { type: "solid", color: "F0DFB0", pt: 1 },
+        autoPage: false, margin: [0.02, 0.04, 0.02, 0.04], rowH: pairH / 2,
+      });
+      s.addText("→", { x: arrowX, y, w: arrowW, h: pairH, align: "center", valign: "middle", fontFace: BODY_FONT, fontSize: 16, bold: true, color: MUTED, isTextBox: true, margin: 0 });
+      const outHead = [{ text: "P(applied)", options: { fill: { color: GOLD }, color: WHITE, bold: true, align: "center", valign: "middle", fontSize: 8.5 } }];
+      const outRow = [{ text: output, options: { align: "center", valign: "middle", bold: true, color: NAVY_DK, fill: { color: rowBg } } }];
+      s.addTable([outHead, outRow], {
+        x: outX, y, w: outputW, h: pairH, colW: [outputW],
+        fontFace: BODY_FONT, fontSize: 12.5, border: { type: "solid", color: "F0DFB0", pt: 1 },
+        autoPage: false, margin: [0.02, 0.04, 0.02, 0.04], rowH: pairH / 2,
+      });
+    }
+    scenarioPair(ty, "1", GOLD, WHITE, "0.42");
+    scenarioPair(row2Y, "0", NAVY, "FBF3E1", "0.31");
+
+    s.addShape("roundRect", { x: x2 + 0.25, y: finalY, w: cw - 0.5, h: finalH, rectRadius: 0.06, fill: { color: NAVY_DK }, line: { type: "none" } });
+    s.addText([
+      { text: "τ(G) = f(G,1) − f(G,0) = 0.42 − 0.31 = ", options: { color: WHITE } },
+      { text: "0.11", options: { bold: true, color: GOLD, fontSize: 14 } },
+    ], { x: x2 + 0.45, y: finalY, w: cw - 0.9, h: finalH, valign: "middle", fontFace: BODY_FONT, fontSize: 11.5, bold: true, isTextBox: true, margin: 0 });
   }
 
   const pc_top = top + ch + 0.15, pc_h = 1.35;
@@ -336,34 +348,46 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     { text: "SCORE   ", options: { bold: true, color: GOLD } },
     { text: "each model scores customer G under ITS OWN scenario", options: { color: MUTED, italic: true } },
   ], { x: x2 + 0.25, y: top + 0.14, w: cw - 0.5, h: 0.28, fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0 });
-  s.addText("No flag to flip — which model you ask IS the mailing scenario", {
+  s.addText("Two separate scoring calls — each with its own input table and output table", {
     x: x2 + 0.25, y: legendY6, w: cw - 0.5, h: 0.22, fontFace: BODY_FONT, fontSize: 9, italic: true, color: MUTED, isTextBox: true, margin: 0,
   });
   {
-    const tw = cw - 0.5, ty = top + 0.68, th = ch - 0.83;
-    const head = ["Model", "Mailing scenario", "P(applied)"].map(t => ({ text: t, options: { fill: { color: GOLD }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
-    const rows = [
-      head,
-      [
-        { text: "μ̂₀ — control model", options: { align: "left", valign: "middle", bold: true, color: NAVY, fill: { color: WHITE } } },
-        { text: "G doesn't get it", options: { align: "center", valign: "middle", color: BODY, fill: { color: WHITE } } },
-        { text: "0.19", options: { align: "center", valign: "middle", color: BODY, fill: { color: WHITE } } },
-      ],
-      [
-        { text: "μ̂₁ — treatment model", options: { align: "left", valign: "middle", bold: true, color: GOLD, fill: { color: "FBF3E1" } } },
-        { text: "G gets the offer", options: { align: "center", valign: "middle", color: BODY, fill: { color: "FBF3E1" } } },
-        { text: "0.35", options: { align: "center", valign: "middle", color: BODY, fill: { color: "FBF3E1" } } },
-      ],
-      [
-        { text: "τ(G) = μ̂₁(G) − μ̂₀(G)", options: { colspan: 2, align: "left", valign: "middle", bold: true, color: WHITE, fill: { color: NAVY_DK } } },
-        { text: "0.16", options: { align: "center", valign: "middle", bold: true, color: GOLD, fill: { color: NAVY_DK }, fontSize: 15 } },
-      ],
-    ];
-    s.addTable(rows, {
-      x: x2 + 0.25, y: ty, w: tw, h: th, colW: [tw * 0.44, tw * 0.28, tw * 0.28],
-      fontFace: BODY_FONT, fontSize: 11, border: { type: "solid", color: "F0DFB0", pt: 1 },
-      autoPage: false, margin: [0.04, 0.06, 0.04, 0.06], rowH: th / 4,
-    });
+    const ty = top + 0.68;
+    const inputW = 2.7, arrowW = 0.4, outputW = 1.7;
+    const inX = x2 + 0.25, arrowX = inX + inputW, outX = arrowX + arrowW;
+    const pairH = 0.42, gapPair = 0.12, gapFinal = 0.1;
+    const row2Y = ty + pairH + gapPair;
+    const finalY = row2Y + pairH + gapFinal;
+    const finalH = (top + ch - 0.15) - finalY;
+
+    function scenarioPair(y, modelVal, modelColor, rowBg, output) {
+      const inHead = ["Customer", "model"].map(t => ({ text: t, options: { fill: { color: NAVY }, color: WHITE, bold: true, align: "center", valign: "middle", fontSize: 8.5 } }));
+      const inRow = [
+        { text: "G", options: { align: "center", valign: "middle", bold: true, color: NAVY, fill: { color: rowBg } } },
+        { text: modelVal, options: { align: "center", valign: "middle", bold: true, color: modelColor, fill: { color: rowBg } } },
+      ];
+      s.addTable([inHead, inRow], {
+        x: inX, y, w: inputW, h: pairH, colW: [inputW * 0.34, inputW * 0.66],
+        fontFace: BODY_FONT, fontSize: 10.5, border: { type: "solid", color: "F0DFB0", pt: 1 },
+        autoPage: false, margin: [0.02, 0.04, 0.02, 0.04], rowH: pairH / 2,
+      });
+      s.addText("→", { x: arrowX, y, w: arrowW, h: pairH, align: "center", valign: "middle", fontFace: BODY_FONT, fontSize: 16, bold: true, color: MUTED, isTextBox: true, margin: 0 });
+      const outHead = [{ text: "P(applied)", options: { fill: { color: GOLD }, color: WHITE, bold: true, align: "center", valign: "middle", fontSize: 8.5 } }];
+      const outRow = [{ text: output, options: { align: "center", valign: "middle", bold: true, color: NAVY_DK, fill: { color: rowBg } } }];
+      s.addTable([outHead, outRow], {
+        x: outX, y, w: outputW, h: pairH, colW: [outputW],
+        fontFace: BODY_FONT, fontSize: 12.5, border: { type: "solid", color: "F0DFB0", pt: 1 },
+        autoPage: false, margin: [0.02, 0.04, 0.02, 0.04], rowH: pairH / 2,
+      });
+    }
+    scenarioPair(ty, "μ̂₀", NAVY, WHITE, "0.19");
+    scenarioPair(row2Y, "μ̂₁", GOLD, "FBF3E1", "0.35");
+
+    s.addShape("roundRect", { x: x2 + 0.25, y: finalY, w: cw - 0.5, h: finalH, rectRadius: 0.06, fill: { color: NAVY_DK }, line: { type: "none" } });
+    s.addText([
+      { text: "τ(G) = μ̂₁(G) − μ̂₀(G) = 0.35 − 0.19 = ", options: { color: WHITE } },
+      { text: "0.16", options: { bold: true, color: GOLD, fontSize: 14 } },
+    ], { x: x2 + 0.45, y: finalY, w: cw - 0.9, h: finalH, valign: "middle", fontFace: BODY_FONT, fontSize: 11.5, bold: true, isTextBox: true, margin: 0 });
   }
 
   const pc_top = top + ch + 0.15, pc_h = 1.35;
