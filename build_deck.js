@@ -202,38 +202,81 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   const s = newSlide(WHITE);
   header(s, "Estimator 1 of 3", "S-Learner, In Our Prescreen Example");
 
-  const cw = 5.85, x1 = 0.6, x2 = 6.85, top = 1.55, ch = 1.75;
+  const cw = 5.85, x1 = 0.6, x2 = 6.85, top = 1.5, ch = 2.15;
+
+  // TRAIN — one pooled dataset, one fit() call
   s.addShape("roundRect", { x: x1, y: top, w: cw, h: ch, rectRadius: 0.1, fill: { color: ICE_LT }, line: { color: NAVY, width: 1 } });
-  s.addText("TRAIN", { x: x1 + 0.3, y: top + 0.18, w: cw - 0.6, h: 0.35, fontFace: BODY_FONT, fontSize: 11.5, bold: true, color: NAVY, charSpacing: 1.5, isTextBox: true, margin: 0 });
-  s.addText("One GBM/logistic model, fit on ALL customers — treatment and control together. Features = customer attributes (utilization, tenure, income band, existing balances) plus a single is_treated flag. Label = responded (Y).", {
-    x: x1 + 0.3, y: top + 0.55, w: cw - 0.6, h: ch - 0.75, fontFace: BODY_FONT, fontSize: 12, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
-  });
+  s.addText([
+    { text: "TRAIN   ", options: { bold: true, color: NAVY } },
+    { text: "pooled — ONE model, ONE fit() call", options: { color: MUTED, italic: true } },
+  ], { x: x1 + 0.25, y: top + 0.15, w: cw - 0.5, h: 0.3, fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0 });
+  {
+    const tw = cw - 0.5, ty = top + 0.5, th = ch - 0.65;
+    const head = ["Customer", "is_treated", "Y"].map(t => ({ text: t, options: { fill: { color: NAVY }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
+    const data = [["A", "0", "0"], ["B", "0", "1"], ["C", "0", "0"], ["D", "1", "1"], ["E", "1", "0"], ["F", "1", "1"]];
+    const rows = [head, ...data.map((r, i) => r.map((v, j) => ({
+      text: v,
+      options: { align: "center", valign: "middle", bold: j === 0, color: j === 1 ? (v === "0" ? NAVY : GOLD) : BODY, fill: { color: i % 2 === 0 ? WHITE : "F4F6FB" } },
+    })))];
+    s.addTable(rows, {
+      x: x1 + 0.25, y: ty, w: tw, h: th, colW: [tw * 0.38, tw * 0.32, tw * 0.3],
+      fontFace: BODY_FONT, fontSize: 10.5, border: { type: "solid", color: "E4E7F0", pt: 1 },
+      autoPage: false, margin: [0.02, 0.05, 0.02, 0.05], rowH: th / 7,
+    });
+  }
 
+  // SCORE — same model, called twice for one customer
   s.addShape("roundRect", { x: x2, y: top, w: cw, h: ch, rectRadius: 0.1, fill: { color: GOLD_BG }, line: { color: GOLD, width: 1 } });
-  s.addText("SCORE", { x: x2 + 0.3, y: top + 0.18, w: cw - 0.6, h: 0.35, fontFace: BODY_FONT, fontSize: 11.5, bold: true, color: GOLD, charSpacing: 1.5, isTextBox: true, margin: 0 });
-  s.addText("Score every customer twice — once with is_treated=1, once with is_treated=0 — then τ(x) = f(x,1) − f(x,0). Only one model ever goes to production; scoring is just two forward passes per customer.", {
-    x: x2 + 0.3, y: top + 0.55, w: cw - 0.6, h: ch - 0.75, fontFace: BODY_FONT, fontSize: 12, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
-  });
+  s.addText([
+    { text: "SCORE   ", options: { bold: true, color: GOLD } },
+    { text: "same model — TWO predict() calls per customer", options: { color: MUTED, italic: true } },
+  ], { x: x2 + 0.25, y: top + 0.15, w: cw - 0.5, h: 0.3, fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0 });
+  {
+    const tw = cw - 0.5, ty = top + 0.5, th = ch - 0.65;
+    const head = ["Predict call", "is_treated in", "f(G, ·)"].map(t => ({ text: t, options: { fill: { color: GOLD }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
+    const rows = [
+      head,
+      [
+        { text: "Call 1", options: { align: "center", valign: "middle", bold: true, color: NAVY, fill: { color: WHITE } } },
+        { text: "1  (treated)", options: { align: "center", valign: "middle", color: GOLD, fill: { color: WHITE } } },
+        { text: "0.42", options: { align: "center", valign: "middle", color: BODY, fill: { color: WHITE } } },
+      ],
+      [
+        { text: "Call 2", options: { align: "center", valign: "middle", bold: true, color: NAVY, fill: { color: "FBF3E1" } } },
+        { text: "0  (control)", options: { align: "center", valign: "middle", color: NAVY, fill: { color: "FBF3E1" } } },
+        { text: "0.31", options: { align: "center", valign: "middle", color: BODY, fill: { color: "FBF3E1" } } },
+      ],
+      [
+        { text: "τ(G) = f(G,1) − f(G,0)", options: { colspan: 2, align: "left", valign: "middle", bold: true, color: WHITE, fill: { color: NAVY_DK } } },
+        { text: "0.11", options: { align: "center", valign: "middle", bold: true, color: GOLD, fill: { color: NAVY_DK }, fontSize: 15 } },
+      ],
+    ];
+    s.addTable(rows, {
+      x: x2 + 0.25, y: ty, w: tw, h: th, colW: [tw * 0.36, tw * 0.34, tw * 0.3],
+      fontFace: BODY_FONT, fontSize: 11.5, border: { type: "solid", color: "F0DFB0", pt: 1 },
+      autoPage: false, margin: [0.04, 0.06, 0.04, 0.06], rowH: th / 4,
+    });
+  }
 
-  const pc_top = top + ch + 0.2, pc_h = 1.6;
+  const pc_top = top + ch + 0.15, pc_h = 1.35;
   s.addShape("roundRect", { x: x1, y: pc_top, w: cw, h: pc_h, rectRadius: 0.1, fill: { color: GREEN_BG }, line: { type: "none" } });
-  s.addText("+  Pros", { x: x1 + 0.3, y: pc_top + 0.16, w: cw - 0.6, h: 0.35, fontFace: HEAD_FONT, fontSize: 14.5, bold: true, color: GREEN, isTextBox: true, margin: 0 });
-  s.addText("One model to build, validate, and monitor in production. Pools all customers together, so it's data-efficient — useful when the control holdout is small.", {
-    x: x1 + 0.3, y: pc_top + 0.55, w: cw - 0.6, h: pc_h - 0.75, fontFace: BODY_FONT, fontSize: 11.5, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
+  s.addText("+  Pros", { x: x1 + 0.3, y: pc_top + 0.14, w: cw - 0.6, h: 0.32, fontFace: HEAD_FONT, fontSize: 14.5, bold: true, color: GREEN, isTextBox: true, margin: 0 });
+  s.addText("One model to build and monitor. Pools all customers, so it's data-efficient when the control holdout is small.", {
+    x: x1 + 0.3, y: pc_top + 0.5, w: cw - 0.6, h: pc_h - 0.65, fontFace: BODY_FONT, fontSize: 11.5, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
   });
 
   s.addShape("roundRect", { x: x2, y: pc_top, w: cw, h: pc_h, rectRadius: 0.1, fill: { color: RED_BG }, line: { type: "none" } });
-  s.addText("−  Cons", { x: x2 + 0.3, y: pc_top + 0.16, w: cw - 0.6, h: 0.35, fontFace: HEAD_FONT, fontSize: 14.5, bold: true, color: RED, isTextBox: true, margin: 0 });
-  s.addText("Regularization and tree-splitting have no reason to favor one is_treated feature over dozens of stronger baseline predictors. Left alone, the model can end up nearly ignoring treatment.", {
-    x: x2 + 0.3, y: pc_top + 0.55, w: cw - 0.6, h: pc_h - 0.75, fontFace: BODY_FONT, fontSize: 11.5, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
+  s.addText("−  Cons", { x: x2 + 0.3, y: pc_top + 0.14, w: cw - 0.6, h: 0.32, fontFace: HEAD_FONT, fontSize: 14.5, bold: true, color: RED, isTextBox: true, margin: 0 });
+  s.addText("Regularization has no reason to favor one is_treated feature over dozens of stronger predictors — treatment can get nearly ignored.", {
+    x: x2 + 0.3, y: pc_top + 0.5, w: cw - 0.6, h: pc_h - 0.65, fontFace: BODY_FONT, fontSize: 11.5, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
   });
 
-  const why_top = pc_top + pc_h + 0.2;
-  s.addShape("roundRect", { x: 0.6, y: why_top, w: 12.1, h: 1.3, rectRadius: 0.08, fill: { color: NAVY_DK }, line: { type: "none" } });
+  const why_top = pc_top + pc_h + 0.15, why_h = 1.15;
+  s.addShape("roundRect", { x: 0.6, y: why_top, w: 12.1, h: why_h, rectRadius: 0.08, fill: { color: NAVY_DK }, line: { type: "none" } });
   s.addText([
     { text: "Why not chosen:  ", options: { bold: true, color: GOLD } },
-    { text: "our baseline behavioral features — utilization, tenure, existing balances — are much stronger predictors of response than the offer itself. A pooled model has every incentive to lean on those and treat is_treated as noise, which is exactly the risk we can't afford when the whole point is isolating the offer's effect.", options: { color: WHITE } },
-  ], { x: 0.95, y: why_top, w: 11.4, h: 1.3, valign: "middle", fontFace: BODY_FONT, fontSize: 12.5, isTextBox: true, margin: 0, lineSpacingMultiple: 1.22 });
+    { text: "baseline behavioral features — utilization, tenure, balances — predict response far better than the offer itself. A pooled model leans on those and treats is_treated as noise, exactly the risk we can't take when isolating the offer's effect is the whole point.", options: { color: WHITE } },
+  ], { x: 0.95, y: why_top, w: 11.4, h: why_h, valign: "middle", fontFace: BODY_FONT, fontSize: 12.5, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2 });
 
   pageNum(s, 5);
 }
@@ -245,38 +288,84 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   const s = newSlide(WHITE);
   header(s, "Estimator 2 of 3", "T-Learner, In Our Prescreen Example");
 
-  const cw = 5.85, x1 = 0.6, x2 = 6.85, top = 1.55, ch = 1.75;
+  const cw = 5.85, x1 = 0.6, x2 = 6.85, top = 1.5, ch = 2.15;
+
+  // TRAIN — two disjoint datasets, two fit() calls
   s.addShape("roundRect", { x: x1, y: top, w: cw, h: ch, rectRadius: 0.1, fill: { color: ICE_LT }, line: { color: NAVY, width: 1 } });
-  s.addText("TRAIN", { x: x1 + 0.3, y: top + 0.18, w: cw - 0.6, h: 0.35, fontFace: BODY_FONT, fontSize: 11.5, bold: true, color: NAVY, charSpacing: 1.5, isTextBox: true, margin: 0 });
-  s.addText("Two fully separate models. Control model μ̂₀ trained only on the small holdout that received no offer. Treatment model μ̂₁ trained only on the (much larger) mailed group. Same features, same label, disjoint training rows.", {
-    x: x1 + 0.3, y: top + 0.55, w: cw - 0.6, h: ch - 0.75, fontFace: BODY_FONT, fontSize: 12, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
-  });
+  s.addText([
+    { text: "TRAIN   ", options: { bold: true, color: NAVY } },
+    { text: "two separate models, TWO fit() calls", options: { color: MUTED, italic: true } },
+  ], { x: x1 + 0.25, y: top + 0.15, w: cw - 0.5, h: 0.3, fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0 });
+  {
+    const innerW = cw - 0.5, gap = 0.2, miniW = (innerW - gap) / 2;
+    const mx1 = x1 + 0.25, mx2 = mx1 + miniW + gap, labelY = top + 0.5, tableY = top + 0.76, tableH = ch - 0.91;
+    s.addText("Control model  →  μ̂₀", { x: mx1, y: labelY, w: miniW, h: 0.24, fontFace: BODY_FONT, fontSize: 10.5, bold: true, color: NAVY, isTextBox: true, margin: 0 });
+    const ctrlHead = ["Customer", "Y"].map(t => ({ text: t, options: { fill: { color: NAVY }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
+    const ctrlRows = [ctrlHead, ...[["A", "0"], ["B", "1"], ["C", "0"]].map((r, i) => r.map((v, j) => ({
+      text: v, options: { align: "center", valign: "middle", bold: j === 0, color: BODY, fill: { color: i % 2 === 0 ? WHITE : "F4F6FB" } },
+    })))];
+    s.addTable(ctrlRows, { x: mx1, y: tableY, w: miniW, h: tableH, colW: [miniW * 0.55, miniW * 0.45], fontFace: BODY_FONT, fontSize: 10.5, border: { type: "solid", color: "E4E7F0", pt: 1 }, autoPage: false, margin: [0.02, 0.04, 0.02, 0.04], rowH: tableH / 4 });
 
+    s.addText("Treatment model  →  μ̂₁", { x: mx2, y: labelY, w: miniW, h: 0.24, fontFace: BODY_FONT, fontSize: 10.5, bold: true, color: GOLD, isTextBox: true, margin: 0 });
+    const trtHead = ["Customer", "Y"].map(t => ({ text: t, options: { fill: { color: GOLD }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
+    const trtRows = [trtHead, ...[["D", "1"], ["E", "0"], ["F", "1"]].map((r, i) => r.map((v, j) => ({
+      text: v, options: { align: "center", valign: "middle", bold: j === 0, color: BODY, fill: { color: i % 2 === 0 ? WHITE : "F4F6FB" } },
+    })))];
+    s.addTable(trtRows, { x: mx2, y: tableY, w: miniW, h: tableH, colW: [miniW * 0.55, miniW * 0.45], fontFace: BODY_FONT, fontSize: 10.5, border: { type: "solid", color: "E4E7F0", pt: 1 }, autoPage: false, margin: [0.02, 0.04, 0.02, 0.04], rowH: tableH / 4 });
+  }
+
+  // SCORE — both models, one predict() call each, for the SAME customer
   s.addShape("roundRect", { x: x2, y: top, w: cw, h: ch, rectRadius: 0.1, fill: { color: GOLD_BG }, line: { color: GOLD, width: 1 } });
-  s.addText("SCORE", { x: x2 + 0.3, y: top + 0.18, w: cw - 0.6, h: 0.35, fontFace: BODY_FONT, fontSize: 11.5, bold: true, color: GOLD, charSpacing: 1.5, isTextBox: true, margin: 0 });
-  s.addText("Score every customer with both models regardless of which arm they were actually in, then τ(x) = μ̂₁(x) − μ̂₀(x). Two independent forward passes, one subtraction.", {
-    x: x2 + 0.3, y: top + 0.55, w: cw - 0.6, h: ch - 0.75, fontFace: BODY_FONT, fontSize: 12, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
-  });
+  s.addText([
+    { text: "SCORE   ", options: { bold: true, color: GOLD } },
+    { text: "both models — ONE predict() call each", options: { color: MUTED, italic: true } },
+  ], { x: x2 + 0.25, y: top + 0.15, w: cw - 0.5, h: 0.3, fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0 });
+  {
+    const tw = cw - 0.5, ty = top + 0.5, th = ch - 0.65;
+    const head = ["Model", "Call", "Output"].map(t => ({ text: t, options: { fill: { color: GOLD }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
+    const rows = [
+      head,
+      [
+        { text: "μ̂₀ — control model", options: { align: "left", valign: "middle", bold: true, color: NAVY, fill: { color: WHITE } } },
+        { text: "predict(G)", options: { align: "center", valign: "middle", color: BODY, fill: { color: WHITE } } },
+        { text: "0.19", options: { align: "center", valign: "middle", color: BODY, fill: { color: WHITE } } },
+      ],
+      [
+        { text: "μ̂₁ — treatment model", options: { align: "left", valign: "middle", bold: true, color: GOLD, fill: { color: "FBF3E1" } } },
+        { text: "predict(G)", options: { align: "center", valign: "middle", color: BODY, fill: { color: "FBF3E1" } } },
+        { text: "0.35", options: { align: "center", valign: "middle", color: BODY, fill: { color: "FBF3E1" } } },
+      ],
+      [
+        { text: "τ(G) = μ̂₁(G) − μ̂₀(G)", options: { colspan: 2, align: "left", valign: "middle", bold: true, color: WHITE, fill: { color: NAVY_DK } } },
+        { text: "0.16", options: { align: "center", valign: "middle", bold: true, color: GOLD, fill: { color: NAVY_DK }, fontSize: 15 } },
+      ],
+    ];
+    s.addTable(rows, {
+      x: x2 + 0.25, y: ty, w: tw, h: th, colW: [tw * 0.44, tw * 0.28, tw * 0.28],
+      fontFace: BODY_FONT, fontSize: 11, border: { type: "solid", color: "F0DFB0", pt: 1 },
+      autoPage: false, margin: [0.04, 0.06, 0.04, 0.06], rowH: th / 4,
+    });
+  }
 
-  const pc_top = top + ch + 0.2, pc_h = 1.6;
+  const pc_top = top + ch + 0.15, pc_h = 1.35;
   s.addShape("roundRect", { x: x1, y: pc_top, w: cw, h: pc_h, rectRadius: 0.1, fill: { color: GREEN_BG }, line: { type: "none" } });
-  s.addText("+  Pros", { x: x1 + 0.3, y: pc_top + 0.16, w: cw - 0.6, h: 0.35, fontFace: HEAD_FONT, fontSize: 14.5, bold: true, color: GREEN, isTextBox: true, margin: 0 });
-  s.addText("Each model specializes freely — no shared regularization fighting over the treatment signal. Conceptually the simplest uplift estimator: it's just “model B minus model A.”", {
-    x: x1 + 0.3, y: pc_top + 0.55, w: cw - 0.6, h: pc_h - 0.75, fontFace: BODY_FONT, fontSize: 11.5, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
+  s.addText("+  Pros", { x: x1 + 0.3, y: pc_top + 0.14, w: cw - 0.6, h: 0.32, fontFace: HEAD_FONT, fontSize: 14.5, bold: true, color: GREEN, isTextBox: true, margin: 0 });
+  s.addText("Each model specializes freely — no shared regularization fighting over the treatment signal. Simplest to reason about: “model B minus model A.”", {
+    x: x1 + 0.3, y: pc_top + 0.5, w: cw - 0.6, h: pc_h - 0.65, fontFace: BODY_FONT, fontSize: 11.5, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
   });
 
   s.addShape("roundRect", { x: x2, y: pc_top, w: cw, h: pc_h, rectRadius: 0.1, fill: { color: RED_BG }, line: { type: "none" } });
-  s.addText("−  Cons", { x: x2 + 0.3, y: pc_top + 0.16, w: cw - 0.6, h: 0.35, fontFace: HEAD_FONT, fontSize: 14.5, bold: true, color: RED, isTextBox: true, margin: 0 });
-  s.addText("Quality depends entirely on how well each arm is estimated alone. A small arm's model is noisy, and subtracting two independently-noisy predictions adds their variances together.", {
-    x: x2 + 0.3, y: pc_top + 0.55, w: cw - 0.6, h: pc_h - 0.75, fontFace: BODY_FONT, fontSize: 11.5, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
+  s.addText("−  Cons", { x: x2 + 0.3, y: pc_top + 0.14, w: cw - 0.6, h: 0.32, fontFace: HEAD_FONT, fontSize: 14.5, bold: true, color: RED, isTextBox: true, margin: 0 });
+  s.addText("Quality depends on how well each arm is estimated alone. A small arm's model is noisy, and subtracting two noisy predictions adds their variances.", {
+    x: x2 + 0.3, y: pc_top + 0.5, w: cw - 0.6, h: pc_h - 0.65, fontFace: BODY_FONT, fontSize: 11.5, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
   });
 
-  const why_top = pc_top + pc_h + 0.2;
-  s.addShape("roundRect", { x: 0.6, y: why_top, w: 12.1, h: 1.3, rectRadius: 0.08, fill: { color: NAVY_DK }, line: { type: "none" } });
+  const why_top = pc_top + pc_h + 0.15, why_h = 1.15;
+  s.addShape("roundRect", { x: 0.6, y: why_top, w: 12.1, h: why_h, rectRadius: 0.08, fill: { color: NAVY_DK }, line: { type: "none" } });
   s.addText([
     { text: "Why not chosen:  ", options: { bold: true, color: GOLD } },
-    { text: "control is deliberately a small holdout — you can't withhold the offer from too many good prospects. That starves the control model of data right where T-Learner needs it most, and its noise gets baked straight into every uplift score. This is the exact gap X-Learner's imputation step is built to close.", options: { color: WHITE } },
-  ], { x: 0.95, y: why_top, w: 11.4, h: 1.3, valign: "middle", fontFace: BODY_FONT, fontSize: 12.5, isTextBox: true, margin: 0, lineSpacingMultiple: 1.22 });
+    { text: "control is deliberately a small holdout — you can't withhold the offer from too many good prospects. That starves the control model exactly where T-Learner needs it most; its noise lands straight in every uplift score. Closing that gap is the reason X-Learner exists.", options: { color: WHITE } },
+  ], { x: 0.95, y: why_top, w: 11.4, h: why_h, valign: "middle", fontFace: BODY_FONT, fontSize: 12.5, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2 });
 
   pageNum(s, 6);
 }
