@@ -147,7 +147,7 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   s.addShape("roundRect", { x: 0.6, y: 4.0, w: 5.7, h: 0.85, rectRadius: 0.06, fill: { color: ICE_LT }, line: { type: "none" } });
   s.addText([
     { text: "In our prescreen example:  ", options: { bold: true, color: NAVY } },
-    { text: "Y = 1 if the customer applies for the credit card, 0 if not.  T = 1 if they received the prescreen mail offer (treatment), 0 if they were held out (control).", options: { color: BODY } },
+    { text: "Y (our Applied column) = 1 if the customer applies for the credit card, 0 if not.  T (our receive_offer column) = 1 if they received the prescreen mail offer (treatment), 0 if held out (control).", options: { color: BODY } },
   ], { x: 0.85, y: 4.0, w: 5.35, h: 0.85, valign: "middle", fontFace: BODY_FONT, fontSize: 11.5, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2 });
   s.addText("the treatment effect — not the response probability — is the thing we're trying to score.", {
     x: 0.6, y: 4.95, w: 5.7, h: 0.45, fontFace: BODY_FONT, fontSize: 11, italic: true, color: MUTED, isTextBox: true, margin: 0,
@@ -179,9 +179,9 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   const s = newSlide(WHITE);
   header(s, "Estimation Strategies", "Three Ways to Estimate an Uplift Score");
   const cards = [
-    { t: "S-Learner", sub: "Single model", d: "One model, is_treated (got the offer, 1/0) as just another input feature. τ(x) = f(x,1) − f(x,0), where 1/0 flips whether the offer was sent.", fill: ICE_LT, badge: null },
-    { t: "T-Learner", sub: "Two models", d: "Two fully separate models, one per arm. τ(x) = μ₁(x) − μ₀(x), where μ₁ is the offer-group model and μ₀ is the no-offer (control) model.", fill: ICE_LT, badge: null },
-    { t: "X-Learner", sub: "Cross-learning", d: "Two outcome models feed two effect models, combined by a weight g(x). Same Y (applied?) and is_treated (got the offer?) as above.", fill: GOLD_BG, badge: "Used here" },
+    { t: "S-Learner", sub: "Single model", d: "One model, receive_offer (got the offer, 1/0) as just another input feature. τ(x) = f(x,1) − f(x,0), where 1/0 flips whether the offer was sent.", fill: ICE_LT, badge: null },
+    { t: "T-Learner", sub: "Two models", d: "Two fully separate models, one per arm. τ(x) = μ̂₁(x) − μ̂₀(x), where μ̂₁ is the offer-group model and μ̂₀ is the no-offer (control) model.", fill: ICE_LT, badge: null },
+    { t: "X-Learner", sub: "Cross-learning", d: "Two outcome models feed two effect models, combined by a weight g(x). Same Applied and receive_offer columns as above.", fill: GOLD_BG, badge: "Used here" },
   ];
   const cw = 3.85, gap = 0.3, top = 1.85, ch = 4.9;
   const startX = (PW - (cw * 3 + gap * 2)) / 2;
@@ -208,7 +208,6 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   header(s, "Estimator 1 of 3", "S-Learner, In Our Prescreen Example");
 
   const cw = 5.85, x1 = 0.6, x2 = 6.85, top = 1.5, ch = 2.3;
-  const legendY = top + 0.44;
 
   // TRAIN — one pooled dataset, one fit() call
   s.addShape("roundRect", { x: x1, y: top, w: cw, h: ch, rectRadius: 0.1, fill: { color: ICE_LT }, line: { color: NAVY, width: 1 } });
@@ -216,19 +215,16 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     { text: "TRAIN   ", options: { bold: true, color: NAVY } },
     { text: "pooled — ONE model, ONE fit() call", options: { color: MUTED, italic: true } },
   ], { x: x1 + 0.25, y: top + 0.14, w: cw - 0.5, h: 0.28, fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0 });
-  s.addText("is_treated: 1 = got the prescreen offer, 0 = control  ·  Y: 1 = applied for the card, 0 = didn't", {
-    x: x1 + 0.25, y: legendY, w: cw - 0.5, h: 0.22, fontFace: BODY_FONT, fontSize: 9, italic: true, color: MUTED, isTextBox: true, margin: 0,
-  });
   {
-    const tw = cw - 0.5, ty = top + 0.68, th = ch - 0.83;
-    const head = ["Customer", "is_treated", "Y"].map(t => ({ text: t, options: { fill: { color: NAVY }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
+    const tw = cw - 0.5, ty = top + 0.5, th = ch - 0.65;
+    const head = ["Customer", "receive_offer", "Applied"].map(t => ({ text: t, options: { fill: { color: NAVY }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
     const data = [["A", "0", "0"], ["B", "0", "1"], ["C", "0", "0"], ["D", "1", "1"], ["E", "1", "0"], ["F", "1", "1"]];
     const rows = [head, ...data.map((r, i) => r.map((v, j) => ({
       text: v,
       options: { align: "center", valign: "middle", bold: j === 0, color: j === 1 ? (v === "0" ? NAVY : GOLD) : BODY, fill: { color: i % 2 === 0 ? WHITE : "F4F6FB" } },
     })))];
     s.addTable(rows, {
-      x: x1 + 0.25, y: ty, w: tw, h: th, colW: [tw * 0.38, tw * 0.32, tw * 0.3],
+      x: x1 + 0.25, y: ty, w: tw, h: th, colW: [tw * 0.34, tw * 0.34, tw * 0.32],
       fontFace: BODY_FONT, fontSize: 10.5, border: { type: "solid", color: "E4E7F0", pt: 1 },
       autoPage: false, margin: [0.02, 0.05, 0.02, 0.05], rowH: th / 7,
     });
@@ -240,14 +236,11 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     { text: "SCORE   ", options: { bold: true, color: GOLD } },
     { text: "one model, run for BOTH mailing scenarios on customer G", options: { color: MUTED, italic: true } },
   ], { x: x2 + 0.25, y: top + 0.14, w: cw - 0.5, h: 0.28, fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0 });
-  s.addText("Two separate scoring calls — each with its own input table and output table", {
-    x: x2 + 0.25, y: legendY, w: cw - 0.5, h: 0.22, fontFace: BODY_FONT, fontSize: 9, italic: true, color: MUTED, isTextBox: true, margin: 0,
-  });
   {
-    const ty = top + 0.68;
+    const ty = top + 0.5;
     const inputW = 2.5, arrowW = 0.4, outputW = 1.7;
     const inX = x2 + 0.25, arrowX = inX + inputW, outX = arrowX + arrowW;
-    const pairH = 0.42, gapPair = 0.12, gapFinal = 0.1;
+    const pairH = 0.46, gapPair = 0.13, gapFinal = 0.12;
     const row2Y = ty + pairH + gapPair;
     const finalY = row2Y + pairH + gapFinal;
     const finalH = (top + ch - 0.15) - finalY;
@@ -264,7 +257,7 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
         autoPage: false, margin: [0.02, 0.04, 0.02, 0.04], rowH: pairH / 2,
       });
       s.addText("→", { x: arrowX, y, w: arrowW, h: pairH, align: "center", valign: "middle", fontFace: BODY_FONT, fontSize: 16, bold: true, color: MUTED, isTextBox: true, margin: 0 });
-      const outHead = [{ text: "P(applied)", options: { fill: { color: GOLD }, color: WHITE, bold: true, align: "center", valign: "middle", fontSize: 8.5 } }];
+      const outHead = [{ text: "Applied", options: { fill: { color: GOLD }, color: WHITE, bold: true, align: "center", valign: "middle", fontSize: 8.5 } }];
       const outRow = [{ text: output, options: { align: "center", valign: "middle", bold: true, color: NAVY_DK, fill: { color: rowBg } } }];
       s.addTable([outHead, outRow], {
         x: outX, y, w: outputW, h: pairH, colW: [outputW],
@@ -285,13 +278,13 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   const pc_top = top + ch + 0.15, pc_h = 1.35;
   s.addShape("roundRect", { x: x1, y: pc_top, w: cw, h: pc_h, rectRadius: 0.1, fill: { color: GREEN_BG }, line: { type: "none" } });
   s.addText("+  Pros", { x: x1 + 0.3, y: pc_top + 0.14, w: cw - 0.6, h: 0.32, fontFace: HEAD_FONT, fontSize: 14.5, bold: true, color: GREEN, isTextBox: true, margin: 0 });
-  s.addText("One model to build and monitor. Pools all customers, so it's data-efficient when the control holdout is small.", {
+  s.addText("One model to build and monitor. Pools all customers, so it's data-efficient even with a small treatment group.", {
     x: x1 + 0.3, y: pc_top + 0.5, w: cw - 0.6, h: pc_h - 0.65, fontFace: BODY_FONT, fontSize: 11.5, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
   });
 
   s.addShape("roundRect", { x: x2, y: pc_top, w: cw, h: pc_h, rectRadius: 0.1, fill: { color: RED_BG }, line: { type: "none" } });
   s.addText("−  Cons", { x: x2 + 0.3, y: pc_top + 0.14, w: cw - 0.6, h: 0.32, fontFace: HEAD_FONT, fontSize: 14.5, bold: true, color: RED, isTextBox: true, margin: 0 });
-  s.addText("Regularization has no reason to favor one is_treated feature over dozens of stronger predictors — treatment can get nearly ignored.", {
+  s.addText("Regularization has no reason to favor one receive_offer feature over dozens of stronger predictors — treatment can get nearly ignored.", {
     x: x2 + 0.3, y: pc_top + 0.5, w: cw - 0.6, h: pc_h - 0.65, fontFace: BODY_FONT, fontSize: 11.5, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
   });
 
@@ -299,7 +292,7 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   s.addShape("roundRect", { x: 0.6, y: why_top, w: 12.1, h: why_h, rectRadius: 0.08, fill: { color: NAVY_DK }, line: { type: "none" } });
   s.addText([
     { text: "Why not chosen:  ", options: { bold: true, color: GOLD } },
-    { text: "baseline behavioral features — utilization, tenure, balances — predict response far better than the offer itself. A pooled model leans on those and treats is_treated as noise, exactly the risk we can't take when isolating the offer's effect is the whole point.", options: { color: WHITE } },
+    { text: "baseline behavioral features — utilization, tenure, balances — predict response far better than the offer itself. A pooled model leans on those and treats receive_offer as noise, exactly the risk we can't take when isolating the offer's effect is the whole point.", options: { color: WHITE } },
   ], { x: 0.95, y: why_top, w: 11.4, h: why_h, valign: "middle", fontFace: BODY_FONT, fontSize: 12.5, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2 });
 
   pageNum(s, 5);
@@ -313,7 +306,6 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   header(s, "Estimator 2 of 3", "T-Learner, In Our Prescreen Example");
 
   const cw = 5.85, x1 = 0.6, x2 = 6.85, top = 1.5, ch = 2.3;
-  const legendY6 = top + 0.44;
 
   // TRAIN — two disjoint datasets, two fit() calls
   s.addShape("roundRect", { x: x1, y: top, w: cw, h: ch, rectRadius: 0.1, fill: { color: ICE_LT }, line: { color: NAVY, width: 1 } });
@@ -321,25 +313,22 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     { text: "TRAIN   ", options: { bold: true, color: NAVY } },
     { text: "two separate models, TWO fit() calls", options: { color: MUTED, italic: true } },
   ], { x: x1 + 0.25, y: top + 0.14, w: cw - 0.5, h: 0.28, fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0 });
-  s.addText("Control = A, B, C — did NOT get the offer/coupon.  Treatment = D, E, F — DID get the offer/coupon. Y: 1 = applied, 0 = didn't.", {
-    x: x1 + 0.25, y: legendY6, w: cw - 0.5, h: 0.22, fontFace: BODY_FONT, fontSize: 9, italic: true, color: MUTED, isTextBox: true, margin: 0,
-  });
   {
     const innerW = cw - 0.5, gap = 0.2, miniW = (innerW - gap) / 2;
-    const mx1 = x1 + 0.25, mx2 = mx1 + miniW + gap, labelY = top + 0.7, tableY = top + 0.94, tableH = ch - 1.09;
+    const mx1 = x1 + 0.25, mx2 = mx1 + miniW + gap, labelY = top + 0.5, tableY = top + 0.74, tableH = ch - 0.89;
     s.addText("Control (A,B,C)  →  μ̂₀", { x: mx1, y: labelY, w: miniW, h: 0.24, fontFace: BODY_FONT, fontSize: 10, bold: true, color: NAVY, isTextBox: true, margin: 0 });
-    const ctrlHead = ["Customer", "Y"].map(t => ({ text: t, options: { fill: { color: NAVY }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
+    const ctrlHead = ["Customer", "Applied"].map(t => ({ text: t, options: { fill: { color: NAVY }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
     const ctrlRows = [ctrlHead, ...[["A", "0"], ["B", "1"], ["C", "0"]].map((r, i) => r.map((v, j) => ({
       text: v, options: { align: "center", valign: "middle", bold: j === 0, color: BODY, fill: { color: i % 2 === 0 ? WHITE : "F4F6FB" } },
     })))];
-    s.addTable(ctrlRows, { x: mx1, y: tableY, w: miniW, h: tableH, colW: [miniW * 0.55, miniW * 0.45], fontFace: BODY_FONT, fontSize: 10.5, border: { type: "solid", color: "E4E7F0", pt: 1 }, autoPage: false, margin: [0.02, 0.04, 0.02, 0.04], rowH: tableH / 4 });
+    s.addTable(ctrlRows, { x: mx1, y: tableY, w: miniW, h: tableH, colW: [miniW * 0.5, miniW * 0.5], fontFace: BODY_FONT, fontSize: 10.5, border: { type: "solid", color: "E4E7F0", pt: 1 }, autoPage: false, margin: [0.02, 0.04, 0.02, 0.04], rowH: tableH / 4 });
 
     s.addText("Treatment (D,E,F)  →  μ̂₁", { x: mx2, y: labelY, w: miniW, h: 0.24, fontFace: BODY_FONT, fontSize: 10, bold: true, color: GOLD, isTextBox: true, margin: 0 });
-    const trtHead = ["Customer", "Y"].map(t => ({ text: t, options: { fill: { color: GOLD }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
+    const trtHead = ["Customer", "Applied"].map(t => ({ text: t, options: { fill: { color: GOLD }, color: WHITE, bold: true, align: "center", valign: "middle" } }));
     const trtRows = [trtHead, ...[["D", "1"], ["E", "0"], ["F", "1"]].map((r, i) => r.map((v, j) => ({
       text: v, options: { align: "center", valign: "middle", bold: j === 0, color: BODY, fill: { color: i % 2 === 0 ? WHITE : "F4F6FB" } },
     })))];
-    s.addTable(trtRows, { x: mx2, y: tableY, w: miniW, h: tableH, colW: [miniW * 0.55, miniW * 0.45], fontFace: BODY_FONT, fontSize: 10.5, border: { type: "solid", color: "E4E7F0", pt: 1 }, autoPage: false, margin: [0.02, 0.04, 0.02, 0.04], rowH: tableH / 4 });
+    s.addTable(trtRows, { x: mx2, y: tableY, w: miniW, h: tableH, colW: [miniW * 0.5, miniW * 0.5], fontFace: BODY_FONT, fontSize: 10.5, border: { type: "solid", color: "E4E7F0", pt: 1 }, autoPage: false, margin: [0.02, 0.04, 0.02, 0.04], rowH: tableH / 4 });
   }
 
   // SCORE — both models, one predict() call each, for the SAME customer
@@ -348,14 +337,11 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     { text: "SCORE   ", options: { bold: true, color: GOLD } },
     { text: "each model scores customer G under ITS OWN scenario", options: { color: MUTED, italic: true } },
   ], { x: x2 + 0.25, y: top + 0.14, w: cw - 0.5, h: 0.28, fontFace: BODY_FONT, fontSize: 11, isTextBox: true, margin: 0 });
-  s.addText("Two separate scoring calls — each with its own input table and output table", {
-    x: x2 + 0.25, y: legendY6, w: cw - 0.5, h: 0.22, fontFace: BODY_FONT, fontSize: 9, italic: true, color: MUTED, isTextBox: true, margin: 0,
-  });
   {
-    const ty = top + 0.68;
+    const ty = top + 0.5;
     const inputW = 2.7, arrowW = 0.4, outputW = 1.7;
     const inX = x2 + 0.25, arrowX = inX + inputW, outX = arrowX + arrowW;
-    const pairH = 0.42, gapPair = 0.12, gapFinal = 0.1;
+    const pairH = 0.46, gapPair = 0.13, gapFinal = 0.12;
     const row2Y = ty + pairH + gapPair;
     const finalY = row2Y + pairH + gapFinal;
     const finalH = (top + ch - 0.15) - finalY;
@@ -372,7 +358,7 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
         autoPage: false, margin: [0.02, 0.04, 0.02, 0.04], rowH: pairH / 2,
       });
       s.addText("→", { x: arrowX, y, w: arrowW, h: pairH, align: "center", valign: "middle", fontFace: BODY_FONT, fontSize: 16, bold: true, color: MUTED, isTextBox: true, margin: 0 });
-      const outHead = [{ text: "P(applied)", options: { fill: { color: GOLD }, color: WHITE, bold: true, align: "center", valign: "middle", fontSize: 8.5 } }];
+      const outHead = [{ text: "Applied", options: { fill: { color: GOLD }, color: WHITE, bold: true, align: "center", valign: "middle", fontSize: 8.5 } }];
       const outRow = [{ text: output, options: { align: "center", valign: "middle", bold: true, color: NAVY_DK, fill: { color: rowBg } } }];
       s.addTable([outHead, outRow], {
         x: outX, y, w: outputW, h: pairH, colW: [outputW],
@@ -407,9 +393,9 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   s.addShape("roundRect", { x: 0.6, y: why_top, w: 12.1, h: why_h, rectRadius: 0.08, fill: { color: NAVY_DK }, line: { type: "none" } });
   s.addText([
     { text: "Why not chosen:  ", options: { bold: true, color: GOLD } },
-    { text: "T-Learner isn't broken by design — if control and treatment were roughly balanced (50/50), both models would have plenty of data and this would likely work fine. ", options: { color: WHITE } },
+    { text: "T-Learner isn't broken by design — if receive_offer were roughly 50/50, μ̂₀ and μ̂₁ would train on comparable sample sizes and subtracting two similarly-precise models wouldn't cost much. ", options: { color: WHITE } },
     { text: "The problem is our specific setup: ", options: { bold: true, color: "C9D2F0" } },
-    { text: "control is deliberately a small holdout — you can't withhold the offer from too many good prospects. That imbalance starves the control model exactly where T-Learner needs it most, and its noise lands straight in every uplift score. Closing that imbalance gap is the reason X-Learner exists.", options: { color: WHITE } },
+    { text: "about 70% of customers are held-out control (no offer) and only ~30% receive the mailed offer — you can't afford to mail everyone in a live campaign. That imbalance starves μ̂₁, the offer-side model, exactly where T-Learner needs it most: τ(x)=μ̂₁(x)−μ̂₀(x) inherits nearly all of μ̂₁'s extra noise. Closing that gap without needing a bigger treatment group is the reason X-Learner exists.", options: { color: WHITE } },
   ], { x: 0.95, y: why_top, w: 11.4, h: why_h, valign: "middle", fontFace: BODY_FONT, fontSize: 12, isTextBox: true, margin: 0, lineSpacingMultiple: 1.22 });
 
   pageNum(s, 6);
@@ -431,7 +417,7 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     ],
     [
       { text: "How effect\nis estimated", options: { bold: true, color: NAVY } },
-      { text: "Implicit — read off one shared model's treatment term", options: {} },
+      { text: "Implicit — read off one shared model's receive_offer term", options: {} },
       { text: "Difference of two\nindependently-fit models", options: {} },
       { text: "Directly regresses on an\nimputed treatment effect", options: { fill: { color: GOLD_BG } } },
     ],
@@ -439,7 +425,7 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
       { text: "Best when", options: { bold: true, color: NAVY } },
       { text: "Treatment effect is a strong,\neasily separable signal", options: {} },
       { text: "Treatment / control groups\nare large and balanced", options: {} },
-      { text: "Groups are imbalanced —\ne.g. a small control holdout", options: { fill: { color: GOLD_BG } } },
+      { text: "Groups are imbalanced —\ne.g. a small treatment group", options: { fill: { color: GOLD_BG } } },
     ],
     [
       { text: "Main risk", options: { bold: true, color: NAVY } },
@@ -459,7 +445,7 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   s.addShape("roundRect", { x: 0.6, y: 5.5, w: 12.1, h: 1.35, rectRadius: 0.08, fill: { color: NAVY_DK }, line: { type: "none" } });
   s.addText([
     { text: "Our real constraint: ", options: { bold: true, color: GOLD } },
-    { text: "control is deliberately a small holdout — you can't withhold the offer from too many good prospects. That's exactly T-Learner's weak point. X-Learner's imputation step lets the small arm's effect model borrow strength from the large arm's well-estimated outcome model.", options: { color: WHITE } },
+    { text: "about 70% of customers are held-out control (no offer) and only ~30% receive the mailed offer — you can't afford to mail everyone in a live campaign. That's exactly T-Learner's weak point: μ̂₁, the offer-side model, is trained on the smaller group and is noisy. X-Learner's imputation step lets the offer-side effect estimate borrow strength from the reliable, well-estimated control-side model instead.", options: { color: WHITE } },
   ], {
     x: 0.95, y: 5.5, w: 11.4, h: 1.35, valign: "middle", fontFace: BODY_FONT, fontSize: 13, isTextBox: true, margin: 0, lineSpacingMultiple: 1.25,
   });
@@ -474,7 +460,7 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   header(s, "Architecture", "X-Learner, End to End");
   const steps = [
     { n: "1", t: "Outcome Models", d: "μ̂₀(x), μ̂₁(x) — one per arm, trained separately" },
-    { n: "2", t: "Pseudo Effects", d: "Counterfactual predictions turn Y into an imputed effect" },
+    { n: "2", t: "Pseudo Effects", d: "Counterfactual predictions turn Applied into an imputed effect" },
     { n: "3", t: "Effect Models", d: "τC(x), τT(x) — regressors on the imputed effect" },
     { n: "4", t: "Weighted Fusion", d: "g(x) blends the two into one uplift score τ(x)" },
   ];
@@ -523,23 +509,23 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     x: 0.6, y: 3.2, w: 12.1, h: 0.35, fontFace: BODY_FONT, fontSize: 12.5, bold: true, color: NAVY, isTextBox: true, margin: 0,
   });
 
-  const header_row = ["Customer", "True Arm", "True Y", "μ̂₀(x)\ncontrol prediction", "μ̂₁(x)\ntreatment prediction"].map(t => (
+  const header_row = ["Customer", "receive_offer", "Applied", "μ̂₀(x)\npred. Applied, no offer", "μ̂₁(x)\npred. Applied, w/ offer"].map(t => (
     { text: t, options: { fill: { color: NAVY }, color: WHITE, bold: true, align: "center", valign: "middle" } }
   ));
   const data = [
-    ["A", "Control", "0", "0.20", "0.55"],
-    ["B", "Control", "1", "0.60", "0.75"],
-    ["C", "Control", "0", "0.10", "0.30"],
-    ["D", "Treatment", "1", "0.35", "0.80"],
-    ["E", "Treatment", "0", "0.25", "0.40"],
-    ["F", "Treatment", "1", "0.50", "0.70"],
+    ["A", "0 (control)", "0", "0.20", "0.55"],
+    ["B", "0 (control)", "1", "0.60", "0.75"],
+    ["C", "0 (control)", "0", "0.10", "0.30"],
+    ["D", "1 (offer sent)", "1", "0.35", "0.80"],
+    ["E", "1 (offer sent)", "0", "0.25", "0.40"],
+    ["F", "1 (offer sent)", "1", "0.50", "0.70"],
   ];
   const rows = [header_row, ...data.map((r, i) => r.map((v, j) => ({
     text: v,
     options: {
       align: j === 0 ? "left" : "center", valign: "middle",
       bold: j === 0,
-      color: j === 1 ? (v === "Control" ? NAVY : GOLD) : BODY,
+      color: j === 1 ? (v.startsWith("0") ? NAVY : GOLD) : BODY,
       fill: { color: i % 2 === 0 ? WHITE : ICE_LT },
     },
   })))];
@@ -564,8 +550,8 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
 
   // two formula + table columns
   const colW = 5.85, x1 = 0.6, x2 = 6.85, ytop = 2.25;
-  formulaBox(s, "D̃ᵢᶠ = μ̂₁(Xᵢ) − Yᵢ", x1, ytop, colW, 0.6, { fill: GREEN, size: 15 });
-  formulaBox(s, "D̃ᵢᵀ = Yᵢ − μ̂₀(Xᵢ)", x2, ytop, colW, 0.6, { fill: GOLD, size: 15 });
+  formulaBox(s, "D̃ᵢᶜ = μ̂₁(Xᵢ) − Appliedᵢ", x1, ytop, colW, 0.6, { fill: GREEN, size: 15 });
+  formulaBox(s, "D̃ᵢᵀ = Appliedᵢ − μ̂₀(Xᵢ)", x2, ytop, colW, 0.6, { fill: GOLD, size: 15 });
 
   s.addText("Control-side pseudo effect  ·  from A, B, C", { x: x1, y: ytop + 0.68, w: colW, h: 0.35, fontFace: BODY_FONT, fontSize: 12, bold: true, color: GREEN, isTextBox: true, margin: 0 });
   s.addText("Treatment-side pseudo effect  ·  from D, E, F", { x: x2, y: ytop + 0.68, w: colW, h: 0.35, fontFace: BODY_FONT, fontSize: 12, bold: true, color: GOLD, isTextBox: true, margin: 0 });
@@ -579,13 +565,13 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     ];
   }
   const ctrlRows = mkTable([
-    ["Cust.", "μ̂₁(x)", "Y", "D̃ᶜ = μ̂₁ − Y"],
+    ["Cust.", "μ̂₁(x)", "Applied", "D̃ᶜ"],
     ["A", "0.55", "0", "0.55"],
     ["B", "0.75", "1", "−0.25"],
     ["C", "0.30", "0", "0.30"],
   ], GREEN);
   const trtRows = mkTable([
-    ["Cust.", "Y", "μ̂₀(x)", "D̃ᵀ = Y − μ̂₀"],
+    ["Cust.", "Applied", "μ̂₀(x)", "D̃ᵀ"],
     ["D", "1", "0.35", "0.65"],
     ["E", "0", "0.25", "−0.25"],
     ["F", "1", "0.50", "0.50"],
@@ -613,7 +599,7 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   const cw = 5.85, x1 = 0.6, x2 = 6.85, top = 2.25, ch = 2.55;
   s.addShape("roundRect", { x: x1, y: top, w: cw, h: ch, rectRadius: 0.1, fill: { color: RED_BG }, line: { color: RED, width: 1.3 } });
   s.addText("✗  During TRAINING", { x: x1 + 0.3, y: top + 0.22, w: cw - 0.6, h: 0.4, fontFace: HEAD_FONT, fontSize: 16, bold: true, color: RED, isTextBox: true, margin: 0 });
-  s.addText("A is control, so A's real Y and its counterfactual μ̂₁(A) build a control-side pseudo effect. That label trains effect model C only. A never contributes a label to effect model T's training set.", {
+  s.addText("A is control, so A's real Applied outcome and its counterfactual μ̂₁(A) build a control-side pseudo effect. That label trains effect model C only. A never contributes a label to effect model T's training set.", {
     x: x1 + 0.3, y: top + 0.75, w: cw - 0.6, h: ch - 1, fontFace: BODY_FONT, fontSize: 12.5, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.25,
   });
 
