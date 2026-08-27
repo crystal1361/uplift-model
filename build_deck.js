@@ -196,7 +196,93 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
 }
 
 // ---------------------------------------------------------------------------
-// Slide 5 — Comparison table + why X-learner
+// Slide 5 — S-Learner detail: train / score / pros-cons / why not
+// ---------------------------------------------------------------------------
+{
+  const s = newSlide(WHITE);
+  header(s, "Estimator 1 of 3", "S-Learner, In Our Prescreen Example");
+
+  const cw = 5.85, x1 = 0.6, x2 = 6.85, top = 1.55, ch = 1.75;
+  s.addShape("roundRect", { x: x1, y: top, w: cw, h: ch, rectRadius: 0.1, fill: { color: ICE_LT }, line: { color: NAVY, width: 1 } });
+  s.addText("TRAIN", { x: x1 + 0.3, y: top + 0.18, w: cw - 0.6, h: 0.35, fontFace: BODY_FONT, fontSize: 11.5, bold: true, color: NAVY, charSpacing: 1.5, isTextBox: true, margin: 0 });
+  s.addText("One GBM/logistic model, fit on ALL customers — treatment and control together. Features = customer attributes (utilization, tenure, income band, existing balances) plus a single is_treated flag. Label = responded (Y).", {
+    x: x1 + 0.3, y: top + 0.55, w: cw - 0.6, h: ch - 0.75, fontFace: BODY_FONT, fontSize: 12, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
+  });
+
+  s.addShape("roundRect", { x: x2, y: top, w: cw, h: ch, rectRadius: 0.1, fill: { color: GOLD_BG }, line: { color: GOLD, width: 1 } });
+  s.addText("SCORE", { x: x2 + 0.3, y: top + 0.18, w: cw - 0.6, h: 0.35, fontFace: BODY_FONT, fontSize: 11.5, bold: true, color: GOLD, charSpacing: 1.5, isTextBox: true, margin: 0 });
+  s.addText("Score every customer twice — once with is_treated=1, once with is_treated=0 — then τ(x) = f(x,1) − f(x,0). Only one model ever goes to production; scoring is just two forward passes per customer.", {
+    x: x2 + 0.3, y: top + 0.55, w: cw - 0.6, h: ch - 0.75, fontFace: BODY_FONT, fontSize: 12, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
+  });
+
+  const pc_top = top + ch + 0.2, pc_h = 1.6;
+  s.addShape("roundRect", { x: x1, y: pc_top, w: cw, h: pc_h, rectRadius: 0.1, fill: { color: GREEN_BG }, line: { type: "none" } });
+  s.addText("+  Pros", { x: x1 + 0.3, y: pc_top + 0.16, w: cw - 0.6, h: 0.35, fontFace: HEAD_FONT, fontSize: 14.5, bold: true, color: GREEN, isTextBox: true, margin: 0 });
+  s.addText("One model to build, validate, and monitor in production. Pools all customers together, so it's data-efficient — useful when the control holdout is small.", {
+    x: x1 + 0.3, y: pc_top + 0.55, w: cw - 0.6, h: pc_h - 0.75, fontFace: BODY_FONT, fontSize: 11.5, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
+  });
+
+  s.addShape("roundRect", { x: x2, y: pc_top, w: cw, h: pc_h, rectRadius: 0.1, fill: { color: RED_BG }, line: { type: "none" } });
+  s.addText("−  Cons", { x: x2 + 0.3, y: pc_top + 0.16, w: cw - 0.6, h: 0.35, fontFace: HEAD_FONT, fontSize: 14.5, bold: true, color: RED, isTextBox: true, margin: 0 });
+  s.addText("Regularization and tree-splitting have no reason to favor one is_treated feature over dozens of stronger baseline predictors. Left alone, the model can end up nearly ignoring treatment.", {
+    x: x2 + 0.3, y: pc_top + 0.55, w: cw - 0.6, h: pc_h - 0.75, fontFace: BODY_FONT, fontSize: 11.5, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
+  });
+
+  const why_top = pc_top + pc_h + 0.2;
+  s.addShape("roundRect", { x: 0.6, y: why_top, w: 12.1, h: 1.3, rectRadius: 0.08, fill: { color: NAVY_DK }, line: { type: "none" } });
+  s.addText([
+    { text: "Why not chosen:  ", options: { bold: true, color: GOLD } },
+    { text: "our baseline behavioral features — utilization, tenure, existing balances — are much stronger predictors of response than the offer itself. A pooled model has every incentive to lean on those and treat is_treated as noise, which is exactly the risk we can't afford when the whole point is isolating the offer's effect.", options: { color: WHITE } },
+  ], { x: 0.95, y: why_top, w: 11.4, h: 1.3, valign: "middle", fontFace: BODY_FONT, fontSize: 12.5, isTextBox: true, margin: 0, lineSpacingMultiple: 1.22 });
+
+  pageNum(s, 5);
+}
+
+// ---------------------------------------------------------------------------
+// Slide 6 — T-Learner detail: train / score / pros-cons / why not
+// ---------------------------------------------------------------------------
+{
+  const s = newSlide(WHITE);
+  header(s, "Estimator 2 of 3", "T-Learner, In Our Prescreen Example");
+
+  const cw = 5.85, x1 = 0.6, x2 = 6.85, top = 1.55, ch = 1.75;
+  s.addShape("roundRect", { x: x1, y: top, w: cw, h: ch, rectRadius: 0.1, fill: { color: ICE_LT }, line: { color: NAVY, width: 1 } });
+  s.addText("TRAIN", { x: x1 + 0.3, y: top + 0.18, w: cw - 0.6, h: 0.35, fontFace: BODY_FONT, fontSize: 11.5, bold: true, color: NAVY, charSpacing: 1.5, isTextBox: true, margin: 0 });
+  s.addText("Two fully separate models. Control model μ̂₀ trained only on the small holdout that received no offer. Treatment model μ̂₁ trained only on the (much larger) mailed group. Same features, same label, disjoint training rows.", {
+    x: x1 + 0.3, y: top + 0.55, w: cw - 0.6, h: ch - 0.75, fontFace: BODY_FONT, fontSize: 12, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
+  });
+
+  s.addShape("roundRect", { x: x2, y: top, w: cw, h: ch, rectRadius: 0.1, fill: { color: GOLD_BG }, line: { color: GOLD, width: 1 } });
+  s.addText("SCORE", { x: x2 + 0.3, y: top + 0.18, w: cw - 0.6, h: 0.35, fontFace: BODY_FONT, fontSize: 11.5, bold: true, color: GOLD, charSpacing: 1.5, isTextBox: true, margin: 0 });
+  s.addText("Score every customer with both models regardless of which arm they were actually in, then τ(x) = μ̂₁(x) − μ̂₀(x). Two independent forward passes, one subtraction.", {
+    x: x2 + 0.3, y: top + 0.55, w: cw - 0.6, h: ch - 0.75, fontFace: BODY_FONT, fontSize: 12, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
+  });
+
+  const pc_top = top + ch + 0.2, pc_h = 1.6;
+  s.addShape("roundRect", { x: x1, y: pc_top, w: cw, h: pc_h, rectRadius: 0.1, fill: { color: GREEN_BG }, line: { type: "none" } });
+  s.addText("+  Pros", { x: x1 + 0.3, y: pc_top + 0.16, w: cw - 0.6, h: 0.35, fontFace: HEAD_FONT, fontSize: 14.5, bold: true, color: GREEN, isTextBox: true, margin: 0 });
+  s.addText("Each model specializes freely — no shared regularization fighting over the treatment signal. Conceptually the simplest uplift estimator: it's just “model B minus model A.”", {
+    x: x1 + 0.3, y: pc_top + 0.55, w: cw - 0.6, h: pc_h - 0.75, fontFace: BODY_FONT, fontSize: 11.5, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
+  });
+
+  s.addShape("roundRect", { x: x2, y: pc_top, w: cw, h: pc_h, rectRadius: 0.1, fill: { color: RED_BG }, line: { type: "none" } });
+  s.addText("−  Cons", { x: x2 + 0.3, y: pc_top + 0.16, w: cw - 0.6, h: 0.35, fontFace: HEAD_FONT, fontSize: 14.5, bold: true, color: RED, isTextBox: true, margin: 0 });
+  s.addText("Quality depends entirely on how well each arm is estimated alone. A small arm's model is noisy, and subtracting two independently-noisy predictions adds their variances together.", {
+    x: x2 + 0.3, y: pc_top + 0.55, w: cw - 0.6, h: pc_h - 0.75, fontFace: BODY_FONT, fontSize: 11.5, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
+  });
+
+  const why_top = pc_top + pc_h + 0.2;
+  s.addShape("roundRect", { x: 0.6, y: why_top, w: 12.1, h: 1.3, rectRadius: 0.08, fill: { color: NAVY_DK }, line: { type: "none" } });
+  s.addText([
+    { text: "Why not chosen:  ", options: { bold: true, color: GOLD } },
+    { text: "control is deliberately a small holdout — you can't withhold the offer from too many good prospects. That starves the control model of data right where T-Learner needs it most, and its noise gets baked straight into every uplift score. This is the exact gap X-Learner's imputation step is built to close.", options: { color: WHITE } },
+  ], { x: 0.95, y: why_top, w: 11.4, h: 1.3, valign: "middle", fontFace: BODY_FONT, fontSize: 12.5, isTextBox: true, margin: 0, lineSpacingMultiple: 1.22 });
+
+  pageNum(s, 6);
+}
+
+// ---------------------------------------------------------------------------
+// Slide 7 — Comparison table + why X-learner
 // ---------------------------------------------------------------------------
 {
   const s = newSlide(WHITE);
@@ -243,11 +329,11 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   ], {
     x: 0.95, y: 5.5, w: 11.4, h: 1.35, valign: "middle", fontFace: BODY_FONT, fontSize: 13, isTextBox: true, margin: 0, lineSpacingMultiple: 1.25,
   });
-  pageNum(s, 5);
+  pageNum(s, 7);
 }
 
 // ---------------------------------------------------------------------------
-// Slide 6 — X-Learner architecture (4-layer flow)
+// Slide 8 — X-Learner architecture (4-layer flow)
 // ---------------------------------------------------------------------------
 {
   const s = newSlide(WHITE);
@@ -278,11 +364,11 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   s.addText("Layers 1–3 are model training. Layer 4 happens at scoring time, for every customer.", {
     x: 0.6, y: top + bh + 0.55, w: 12.1, h: 0.4, align: "center", fontFace: BODY_FONT, fontSize: 12.5, italic: true, color: MUTED, isTextBox: true, margin: 0,
   });
-  pageNum(s, 6);
+  pageNum(s, 8);
 }
 
 // ---------------------------------------------------------------------------
-// Slide 7 — Layer 1: two outcome models
+// Slide 9 — Layer 1: two outcome models
 // ---------------------------------------------------------------------------
 {
   const s = newSlide(WHITE);
@@ -329,11 +415,11 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     fontFace: BODY_FONT, fontSize: 12.5, border: { type: "solid", color: "E4E7F0", pt: 1 },
     autoPage: false, margin: [0.05, 0.1, 0.05, 0.1], rowH: 0.47,
   });
-  pageNum(s, 7);
+  pageNum(s, 9);
 }
 
 // ---------------------------------------------------------------------------
-// Slide 8 — Layer 2: pseudo effects
+// Slide 10 — Layer 2: pseudo effects
 // ---------------------------------------------------------------------------
 {
   const s = newSlide(WHITE);
@@ -377,11 +463,11 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   s.addText("These are continuous, signed numbers — not 0/1 labels. Each one is a single unit's best available estimate of its own treatment effect, and each becomes a training label in Layer 3.", {
     x: 0.9, y: ytop + 3.25, w: 11.5, h: 0.85, valign: "middle", fontFace: BODY_FONT, fontSize: 12.5, color: WHITE, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
   });
-  pageNum(s, 8);
+  pageNum(s, 10);
 }
 
 // ---------------------------------------------------------------------------
-// Slide 9 — Training vs Scoring (the "what did A participate in" nuance)
+// Slide 11 — Training vs Scoring (the "what did A participate in" nuance)
 // ---------------------------------------------------------------------------
 {
   const s = newSlide(WHITE);
@@ -408,11 +494,11 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     { text: "Why this matters:  ", options: { bold: true, color: GOLD } },
     { text: "it's what makes X-Learner one unified scorer instead of two disconnected ones — every customer, regardless of which arm they were actually in, gets a single fused uplift score at the end.", options: { color: WHITE } },
   ], { x: 0.9, y: top + ch + 0.35, w: 11.5, h: 0.95, valign: "middle", fontFace: BODY_FONT, fontSize: 12.5, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2 });
-  pageNum(s, 9);
+  pageNum(s, 11);
 }
 
 // ---------------------------------------------------------------------------
-// Slide 10 — Layer 3: two effect models
+// Slide 12 — Layer 3: two effect models
 // ---------------------------------------------------------------------------
 {
   const s = newSlide(WHITE);
@@ -450,11 +536,11 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   s.addText("Two different estimates of the same customer's uplift — neither is the final answer yet.", {
     x: 0.6, y: by + bh + 0.15, w: 12.1, h: 0.4, align: "center", italic: true, fontFace: BODY_FONT, fontSize: 12, color: MUTED, isTextBox: true, margin: 0,
   });
-  pageNum(s, 10);
+  pageNum(s, 12);
 }
 
 // ---------------------------------------------------------------------------
-// Slide 11 — Layer 4: weighted fusion
+// Slide 13 — Layer 4: weighted fusion
 // ---------------------------------------------------------------------------
 {
   const s = newSlide(WHITE);
@@ -493,11 +579,11 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   s.addText("0.196 + 0.036 = 0.232 — this single number is what gets ranked, thresholded, and acted on. Everything before this slide exists to produce it responsibly.", {
     x: 0.9, y: 5.55, w: 11.5, h: 0.85, valign: "middle", fontFace: BODY_FONT, fontSize: 13, color: NAVY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.2,
   });
-  pageNum(s, 11);
+  pageNum(s, 13);
 }
 
 // ---------------------------------------------------------------------------
-// Slide 12 — Validation
+// Slide 14 — Validation
 // ---------------------------------------------------------------------------
 {
   const s = newSlide(WHITE);
@@ -523,11 +609,11 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     s.addText(st.l, { x: stx + 2.05, y: sy + 0.14, w: stw - 2.3, h: sh - 0.28, valign: "middle", fontFace: BODY_FONT, fontSize: 10.5, color: BODY, isTextBox: true, margin: 0, lineSpacingMultiple: 1.15 });
     sy += sh + 0.22;
   });
-  pageNum(s, 12);
+  pageNum(s, 14);
 }
 
 // ---------------------------------------------------------------------------
-// Slide 13 — From score to decision
+// Slide 15 — From score to decision
 // ---------------------------------------------------------------------------
 {
   const s = newSlide(WHITE);
@@ -577,11 +663,11 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
   s.addText("Uplift modeling reveals the real, exploitable heterogeneity hiding underneath that flat average.", {
     x: 7.35, y: 4.8, w: 5.0, h: 1.0, fontFace: HEAD_FONT, fontSize: 15.5, bold: true, color: WHITE, isTextBox: true, margin: 0, lineSpacingMultiple: 1.3,
   });
-  pageNum(s, 13);
+  pageNum(s, 15);
 }
 
 // ---------------------------------------------------------------------------
-// Slide 14 — One-minute answer + closing
+// Slide 16 — One-minute answer + closing
 // ---------------------------------------------------------------------------
 {
   const s = newSlide(NAVY);
@@ -622,7 +708,7 @@ function formulaBox(s, text, x, y, w, h, opts = {}) {
     "3. Train two effect models on these pseudo effects. Their output is a continuous uplift score, not a response probability.\n" +
     "4. Finally, blend the two effect models with a weight g(x) into the final uplift score, used for ranking and targeting. The benefit: you're not just looking at who's most likely to respond, but who will produce the biggest incremental response because of the offer."
   );
-  pageNum(s, 14);
+  pageNum(s, 16);
 }
 
 pres.writeFile({ fileName: "uplift_model_deck.pptx" }).then(() => console.log("deck written"));
